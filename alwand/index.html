@@ -23,7 +23,6 @@
     .font-heading { font-family:'El Messiri',sans-serif; }
     ::selection { background:#2E7D32; color:#fff; }
     .product-image-container { background-color:#f4f4f2; border-radius:1.5rem; overflow:hidden; position:relative; display:flex; align-items:center; justify-content:center; }
-    /* FIX: contain + padding so the product fits fully (no cropping) */
     .product-image-container img { mix-blend-mode:multiply; transition:transform .8s cubic-bezier(.25,1,.5,1); width:100%; height:100%; object-fit:contain; padding:1.25rem; }
     .product-card:hover .product-image-container img { transform:scale(1.05); }
     .nav-link { position:relative; }
@@ -292,20 +291,33 @@
     let products = [];
     let currentLang = 'ar', currentCategory = 'all', searchQuery = '', selectedVariants = {}, cart = [], selectedDeliveryZone = 'khanaqin_inside';
 
-    function sanitizeTextField(v, fb = '') { if (v === null || v === undefined) return fb; const s = String(v).trim(); if (!s || s.startsWith('http')) return fb; return s; }
-    function parsePriceNum(v, fb = 0) { if (typeof v === 'number' && !isNaN(v)) return v; if (!v) return fb; const n = Number(String(v).replace(/[^0-9.]/g, '')); return (!isNaN(n) && n > 0) ? n : fb; }
-    function parseStockBool(v, fb = false) { 
+    function sanitizeTextField(v, fb = '') {
+      if (v === null || v === undefined) return fb;
+      const s = String(v).trim();
+      if (!s || s.startsWith('http')) return fb;
+      return s;
+    }
+
+    function parsePriceNum(v, fb = 0) {
+      if (typeof v === 'number' && !isNaN(v)) return v;
+      if (!v) return fb;
+      const n = Number(String(v).replace(/[^0-9.]/g, ''));
+      return (!isNaN(n) && n > 0) ? n : fb;
+    }
+
+    function parseStockBool(v, fb = false) {
       if (v === true || v === 1) return true;
       if (v === false || v === 0) return false;
       const s = String(v === null || v === undefined ? '' : v).trim().toUpperCase();
       if (s === 'TRUE' || s === '1' || s === 'YES' || s === 'Y') return true;
       if (s === 'FALSE' || s === '0' || s === 'NO' || s === 'N') return false;
-      return fb; 
+      return fb;
     }
-    function normalizeDriveImageUrl(u, fb = '') { 
+
+    function normalizeDriveImageUrl(u, fb = '') {
       let c = String(u === null || u === undefined ? '' : u).trim();
       if (!c) c = String(fb === null || fb === undefined ? '' : fb).trim();
-      if (!c) return 'https://placehold.co/400x400/f4f4f2/1a1a1a?text=Oil'; 
+      if (!c) return 'https://placehold.co/400x400/f4f4f2/1a1a1a?text=Oil';
       const fm = c.match(/^=?\s*IMAGE\(\s*"([^"]+)"/i);
       if (fm) c = fm[1].trim();
       c = c.replace(/^["']+|["']+$/g, '').trim();
@@ -315,40 +327,94 @@
         const id = c.match(/\/d\/([a-zA-Z0-9_-]{15,})/) || c.match(/[?&]id=([a-zA-Z0-9_-]{15,})/);
         if (id) return 'https://lh3.googleusercontent.com/d/' + id[1] + '=w600';
       }
-      try { c = encodeURI(decodeURI(c)); } catch (e) { c = c.replace(/ /g, '%20'); }
+      try {
+        c = encodeURI(decodeURI(c));
+      } catch (e) {
+        c = c.replace(/ /g, '%20');
+      }
       c = c.replace(/#/g, '%23');
       return c;
     }
-    function handleImageError(img) { img.onerror = null; img.src = 'https://placehold.co/400x400/f4f4f2/1a1a1a?text=Image+Error'; }
-    function normalizeKey(k) { return String(k).toLowerCase().replace(/[^a-z0-9]/g, ''); }
-    function buildLookup(item) { const m = {}; Object.keys(item).forEach(k => { const n = normalizeKey(k); if (n && !(n in m)) m[n] = item[k]; }); return m; }
-    function pick(m, names) { for (let i = 0; i < names.length; i++) { const v = m[names[i]]; if (v !== undefined && v !== null && String(v).trim() !== '') return v; } return ''; }
 
-        async function syncProducts() {
+    function handleImageError(img) {
+      img.onerror = null;
+      img.src = 'https://placehold.co/400x400/f4f4f2/1a1a1a?text=Image+Error';
+    }
+
+    function normalizeKey(k) {
+      return String(k).toLowerCase().replace(/[^a-z0-9]/g, '');
+    }
+
+    function buildLookup(item) {
+      const m = {};
+      Object.keys(item).forEach(k => {
+        const n = normalizeKey(k);
+        if (n && !(n in m)) m[n] = item[k];
+      });
+      return m;
+    }
+
+    function pick(m, names) {
+      for (let i = 0; i < names.length; i++) {
+        const v = m[names[i]];
+        if (v !== undefined && v !== null && String(v).trim() !== '') return v;
+      }
+      return '';
+    }
+
+    async function syncProducts() {
       try {
         let data = await fetch('/api/getProducts', { cache: 'no-store' }).then(r => r.json());
-        
-        // Fix if the Cloudflare function double-encoded the JSON string
+
         if (typeof data === 'string') {
-            try { data = JSON.parse(data); } catch(e) { console.error('Failed to parse data', e); }
+          try { data = JSON.parse(data); } catch(e) { console.error('Parse Error', e); }
         }
-        
-        if (data && data.error) { console.warn('SHEET ERROR:', data.error); return; }
-        
-                            if (data && data.error) {
-                        console.warn('SHEET ERROR:', data.error);
-                        document.getElementById('products-grid').innerHTML = `<div class="col-span-full text-center py-16 text-red-500 font-bold">Error: ${data.error}</div>`;
-                        return;
-                    }
-                    
-                    if (Array.isArray(data) && data.length > 0) {
-                        // ... (keep the rest exactly the same) else {
-            console.error('Data is not an array:', data);
+
+        if (data && data.error) {
+          console.warn('SHEET ERROR:', data.error);
+          document.getElementById('products-grid').innerHTML = `<div class="col-span-full text-center py-16 text-red-500 font-bold">Error: ${data.error}</div>`;
+          return;
         }
-      } catch (e) { 
-        console.error('Sync Error:', e); 
-      }
-    }
+
+        if (Array.isArray(data) && data.length > 0) {
+          const upd = [];
+          const usedIds = new Set();
+
+          data.forEach((item, idx) => {
+            const m = buildLookup(item);
+            const ar = sanitizeTextField(pick(m, ['namear']), '');
+            if (!ar) return;
+
+            let id = parseInt(String(pick(m, ['id', 'itemid'])).trim(), 10);
+            if (isNaN(id) || usedIds.has(id)) id = 1000 + idx;
+            while (usedIds.has(id)) id += 1000;
+            usedIds.add(id);
+
+            const rawImg = pick(m, ['imageurl1', 'imageurl', 'image', 'img', 'photo']);
+            const img = normalizeDriveImageUrl(rawImg);
+
+            const s1 = sanitizeTextField(pick(m, ['size1']), null);
+            const s2 = sanitizeTextField(pick(m, ['size2']), null);
+            const s3 = sanitizeTextField(pick(m, ['size3']), null);
+
+            const p1 = s1 ? parsePriceNum(pick(m, ['price1']), 0) : null;
+            const p2 = s2 ? parsePriceNum(pick(m, ['price2']), 0) : null;
+            const p3 = s3 ? parsePriceNum(pick(m, ['price3']), 0) : null;
+
+            const st1 = s1 ? parseStockBool(pick(m, ['instock', 'instock1']), false) : false;
+            const st2 = s2 ? parseStockBool(pick(m, ['instock2']), false) : false;
+            const st3 = s3 ? parseStockBool(pick(m, ['instock3']), false) : false;
+
+            let discountPct = 0;
+            const dRaw = pick(m, ['discount']);
+            if (dRaw !== '') {
+              if (typeof dRaw === 'number' && dRaw > 0 && dRaw < 1) {
+                discountPct = Math.round(dRaw * 100);
+              } else {
+                const match = String(dRaw).match(/(\d+(\.\d+)?)/);
+                if (match) discountPct = Math.min(100, Math.round(parseFloat(match[1])));
+              }
+            }
 
             upd.push({
               id: id,
@@ -365,7 +431,7 @@
               discount_sizes: { 1: discountPct, 2: discountPct, 3: discountPct }
             });
           });
-          
+
           if (upd.length > 0) {
             products = upd;
             cart = cart.filter(it => products.some(p => p.id === it.productId));
@@ -375,8 +441,8 @@
             renderCart();
           }
         }
-      } catch (e) { 
-        console.error('Sync Error:', e); 
+      } catch (e) {
+        console.error('Sync Error:', e);
       }
     }
 
@@ -385,10 +451,10 @@
         const cur = selectedVariants[p.id];
         const ok = (cur === 1 && p.size1 && p.in_stock1) || (cur === 2 && p.size2 && p.in_stock2) || (cur === 3 && p.size3 && p.in_stock3);
         if (!cur || (force && !ok)) {
-          if (p.size1 && p.in_stock1) selectedVariants[p.id] = 1; 
-          else if (p.size2 && p.in_stock2) selectedVariants[p.id] = 2; 
-          else if (p.size3 && p.in_stock3) selectedVariants[p.id] = 3; 
-          else if (p.size1) selectedVariants[p.id] = 1; 
+          if (p.size1 && p.in_stock1) selectedVariants[p.id] = 1;
+          else if (p.size2 && p.in_stock2) selectedVariants[p.id] = 2;
+          else if (p.size3 && p.in_stock3) selectedVariants[p.id] = 3;
+          else if (p.size1) selectedVariants[p.id] = 1;
           else selectedVariants[p.id] = 1;
         }
       });
@@ -396,9 +462,13 @@
 
     function getVariantDetails(p, num) {
       let size, price, image, inStock;
-      if (num === 2 && p.size2) { size = p.size2; price = p.price2 || p.price1; image = p.image2 || p.image1; inStock = !!p.in_stock2; }
-      else if (num === 3 && p.size3) { size = p.size3; price = p.price3 || p.price1; image = p.image3 || p.image1; inStock = !!p.in_stock3; }
-      else { size = p.size1 || 'قياس موحد'; price = p.price1 || 0; image = p.image1; inStock = !!p.in_stock1; }
+      if (num === 2 && p.size2) {
+        size = p.size2; price = p.price2 || p.price1; image = p.image2 || p.image1; inStock = !!p.in_stock2;
+      } else if (num === 3 && p.size3) {
+        size = p.size3; price = p.price3 || p.price1; image = p.image3 || p.image1; inStock = !!p.in_stock3;
+      } else {
+        size = p.size1 || 'قياس موحد'; price = p.price1 || 0; image = p.image1; inStock = !!p.in_stock1;
+      }
       
       const disc = (p.discount_sizes && p.discount_sizes[num]) || 0;
       const finalPrice = disc > 0 ? Math.round(price * (100 - disc) / 100) : price;
@@ -406,14 +476,37 @@
       return { num, size, price: finalPrice, originalPrice: price, discountPercent: disc, image, inStock };
     }
 
-    function getCategoryLabel(c) { const e = CATEGORY_TRANSLATIONS[c]; return (e && e[currentLang]) || c; }
-    function getProductName(p) { if (currentLang === 'ku') return p.name_ku || p.name_ar; if (currentLang === 'en') return p.name_en || p.name_ar; return p.name_ar; }
-    function getProductDescription(p) { if (currentLang === 'ku') return p.desc_ku || p.desc_ar || ''; if (currentLang === 'en') return p.desc_en || p.desc_ar || ''; return p.desc_ar || ''; }
-    function formatSizeLabel(s) { if (!s) return translations[currentLang].standardSize; const x = String(s).trim(); if (x === 'قياس موحد') return translations[currentLang].standardSize; return x; }
-    function formatPrice(n) { return (Number(n) || 0).toLocaleString('en-US') + ' ' + translations[currentLang].currency; }
+    function getCategoryLabel(c) {
+      const e = CATEGORY_TRANSLATIONS[c];
+      return (e && e[currentLang]) || c;
+    }
+
+    function getProductName(p) {
+      if (currentLang === 'ku') return p.name_ku || p.name_ar;
+      if (currentLang === 'en') return p.name_en || p.name_ar;
+      return p.name_ar;
+    }
+
+    function getProductDescription(p) {
+      if (currentLang === 'ku') return p.desc_ku || p.desc_ar || '';
+      if (currentLang === 'en') return p.desc_en || p.desc_ar || '';
+      return p.desc_ar || '';
+    }
+
+    function formatSizeLabel(s) {
+      if (!s) return translations[currentLang].standardSize;
+      const x = String(s).trim();
+      if (x === 'قياس موحد') return translations[currentLang].standardSize;
+      return x;
+    }
+
+    function formatPrice(n) {
+      return (Number(n) || 0).toLocaleString('en-US') + ' ' + translations[currentLang].currency;
+    }
 
     function renderCategoryFilters() {
-      const c = document.getElementById('category-filters'); if (!c) return;
+      const c = document.getElementById('category-filters');
+      if (!c) return;
       const t = translations[currentLang];
       const cats = Array.from(new Set(products.map(p => p.category))).filter(Boolean);
       let html = '<button type="button" onclick="filterByCategory(\'all\')" class="px-5 py-2.5 rounded-full text-sm font-bold border transition-all whitespace-nowrap cursor-pointer ' + (currentCategory === 'all' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-900') + '">' + t.allCategories + '</button>';
@@ -425,11 +518,20 @@
       c.innerHTML = html;
     }
 
-    function filterByCategory(cat) { currentCategory = cat; renderCategoryFilters(); renderProducts(); }
-    function handleSearch(v) { searchQuery = String(v || '').trim().toLowerCase(); renderProducts(); }
+    function filterByCategory(cat) {
+      currentCategory = cat;
+      renderCategoryFilters();
+      renderProducts();
+    }
+
+    function handleSearch(v) {
+      searchQuery = String(v || '').trim().toLowerCase();
+      renderProducts();
+    }
 
     function renderProducts(animate = true) {
-      const grid = document.getElementById('products-grid'); if (!grid) return;
+      const grid = document.getElementById('products-grid');
+      if (!grid) return;
       const t = translations[currentLang];
       const filtered = products.filter(p => {
         const inCat = currentCategory === 'all' || p.category === currentCategory;
@@ -437,9 +539,12 @@
         if (!searchQuery) return true;
         return (p.name_ar + ' ' + p.name_ku + ' ' + p.name_en + ' ' + p.category).toLowerCase().includes(searchQuery);
       });
-      
-      if (filtered.length === 0) { grid.innerHTML = '<div class="col-span-full text-center py-16 text-gray-400 font-bold">' + t.emptyCart + '</div>'; return; }
-      
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '<div class="col-span-full text-center py-16 text-gray-400 font-bold">' + t.emptyCart + '</div>';
+        return;
+      }
+
       grid.innerHTML = filtered.map((product, idx) => {
         const activeVar = selectedVariants[product.id] || 1;
         const v = getVariantDetails(product, activeVar);
