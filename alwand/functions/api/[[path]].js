@@ -10,10 +10,16 @@ export async function onRequest(context) {
   if (!APPS_URL) return json({ error: "APPS_SCRIPT_URL not set" }, 500);
 
   try {
-    if (request.method === "GET") {
+        if (request.method === "GET") {
       const target = `${APPS_URL}?action=${encodeURIComponent(action)}`;
       const resp = await fetch(target, { redirect: "follow" });
       const text = await resp.text();
+
+      // If Google returns HTML (like a login page), catch it and return a JSON error
+      if (text.trim().startsWith("<")) {
+        return json({ error: "Google Apps Script returned HTML. Check deployment permissions." }, 500);
+      }
+
       return json(text);
     }
 
