@@ -324,13 +324,17 @@
     function buildLookup(item) { const m = {}; Object.keys(item).forEach(k => { const n = normalizeKey(k); if (n && !(n in m)) m[n] = item[k]; }); return m; }
     function pick(m, names) { for (let i = 0; i < names.length; i++) { const v = m[names[i]]; if (v !== undefined && v !== null && String(v).trim() !== '') return v; } return ''; }
 
-    async function syncProducts() {
+        async function syncProducts() {
       try {
-        const data = await new Promise((resolve, reject) => {
-          fetch('/api/getProducts', { cache: 'no-store' }).then(r => r.json()).then(resolve).catch(reject);
-        });
+        let data = await fetch('/api/getProducts', { cache: 'no-store' }).then(r => r.json());
+        
+        // Fix if the Cloudflare function double-encoded the JSON string
+        if (typeof data === 'string') {
+            try { data = JSON.parse(data); } catch(e) { console.error('Failed to parse data', e); }
+        }
         
         if (data && data.error) { console.warn('SHEET ERROR:', data.error); return; }
+        
         if (Array.isArray(data) && data.length > 0) {
           const upd = [];
           const usedIds = new Set();
@@ -370,6 +374,40 @@
                 if (match) discountPct = Math.min(100, Math.round(parseFloat(match[1])));
               }
             }
+
+            upd.push({
+              id: id,
+              category: sanitizeTextField(pick(m, ['category']), 'زيوت طبيعية'),
+              name_ar: ar,
+              name_ku: sanitizeTextField(pick(m, ['nameku']), ar),
+              name_en: sanitizeTextField(pick(m, ['nameen']), ar),
+              desc_ar: sanitizeTextField(pick(m, ['descriptionar']), ''),
+              desc_ku: sanitizeTextField(pick(m, ['descriptionku']), ''),
+              desc_en: sanitizeTextField(pick(m, ['descriptionen']), ''),
+              size1: s1, price1: p1, image1: img, in_stock1: st1,
+              size2: s2, price2: p2, in_stock2: st2,
+              size3: s3, price3: p3, in_stock3: st3,
+              discount_sizes: { 1: discountPct, 2: discountPct, 3: discountPct }
+            });
+          });
+          
+          if (upd.length > 0) {
+            products = upd;
+            cart = cart.filter(it => products.some(p => p.id === it.productId));
+            initDefaultVariants(true);
+            renderCategoryFilters();
+            renderProducts(false);
+            renderCart();
+          } else {
+            console.warn('Data array was empty or lacked valid products after parsing.');
+          }
+        } else {
+            console.error('Data is not an array:', data);
+        }
+      } catch (e) { 
+        console.error('Sync Error:', e); 
+      }
+    }
 
             upd.push({
               id: id,
