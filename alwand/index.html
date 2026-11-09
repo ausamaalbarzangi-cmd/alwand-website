@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>معصرة الوند | Alwand Oil Press</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@400;600;700&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: { extend: {
+        colors: { brand: { green: '#2E7D32', greenDark: '#1B5E20', blue: '#1565C0', bg: '#fcfcfb', text: '#1a1a1a', gray: '#f4f4f2' } },
+        fontFamily: { sans: ['Tajawal', 'sans-serif'], heading: ['El Messiri', 'sans-serif'] }
+      } }
+    };
+  </script>
+  <style>
+    body { background-color:#fcfcfb; color:#1a1a1a; font-family:'Tajawal',sans-serif; -webkit-font-smoothing:antialiased; scroll-behavior:smooth; }
+    .font-heading { font-family:'El Messiri',sans-serif; }
+    ::selection { background:#2E7D32; color:#fff; }
+    .product-image-container { background-color:#f4f4f2; border-radius:1.5rem; overflow:hidden; position:relative; display:flex; align-items:center; justify-content:center; }
+    /* FIX: contain + padding so the product fits fully (no cropping) */
+    .product-image-container img { mix-blend-mode:multiply; transition:transform .8s cubic-bezier(.25,1,.5,1); width:100%; height:100%; object-fit:contain; padding:1.25rem; }
+    .product-card:hover .product-image-container img { transform:scale(1.05); }
+    .nav-link { position:relative; }
+    .nav-link::after { content:''; position:absolute; width:0; height:1px; bottom:-4px; right:0; background-color:#2E7D32; transition:width .3s ease; }
+    .nav-link:hover::after { width:100%; }
+    .cart-modal { position:fixed; inset:0; z-index:60; display:flex; justify-content:flex-end; background:rgba(26,26,26,.4); backdrop-filter:blur(8px); opacity:0; pointer-events:none; transition:opacity .35s ease; }
+    .cart-modal.open { opacity:1; pointer-events:auto; }
+    .cart-panel { transition:transform .45s cubic-bezier(.2,.8,.2,1); will-change:transform; }
+    html[dir="ltr"] .cart-modal .cart-panel { transform:translateX(100%); }
+    html[dir="rtl"] .cart-modal .cart-panel { transform:translateX(-100%); }
+    html[dir="ltr"] .cart-modal.open .cart-panel, html[dir="rtl"] .cart-modal.open .cart-panel { transform:translateX(0); }
+    .size-pill { transition:all .2s; border:1px solid #e5e7eb; background:#fff; color:#4b5563; }
+    .size-pill:hover { border-color:#2E7D32; color:#2E7D32; }
+    .size-pill-active { background:#2E7D32; color:#fff; border-color:#2E7D32; }
+    .size-pill-inactive { background:#fff; color:#4b5563; }
+    .size-pill-oos { background:#f3f4f6; color:#9ca3af; border-color:#e5e7eb; text-decoration:line-through; }
+    .reveal { animation:fadeUp .75s cubic-bezier(.2,.8,.2,1) both; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
+    ::-webkit-scrollbar { width:6px; height:6px; }
+    ::-webkit-scrollbar-track { background:#fcfcfb; }
+    ::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:99px; }
+    .no-scrollbar::-webkit-scrollbar { display:none; }
+    #toast-container { position:fixed; bottom:2rem; inset-inline:0; z-index:70; display:flex; flex-direction:column; align-items:center; gap:.5rem; pointer-events:none; padding-inline:1rem; }
+    .toast { pointer-events:auto; background:#1a1a1a; color:#fff; border-radius:999px; padding:12px 24px; font-weight:700; font-size:13px; box-shadow:0 10px 30px -10px rgba(0,0,0,.3); display:flex; align-items:center; gap:10px; animation:toastIn .35s cubic-bezier(.2,.8,.2,1),toastOut .35s 2s forwards; }
+    .toast svg { color:#2E7D32; flex-shrink:0; }
+    @keyframes toastIn { from{opacity:0;transform:translateY(20px) scale(.9);} to{opacity:1;transform:translateY(0) scale(1);} }
+    @keyframes toastOut { to{opacity:0;transform:translateY(20px) scale(.9); pointer-events:none;} }
+    .line-clamp-2 { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+
+  <div class="bg-[#1a1a1a] text-white text-[11px] sm:text-xs py-2.5 px-4 text-center font-medium tracking-wide">
+    <span id="top-announcement">زيوت طبيعية 100% معصورة على البارد | توصيل سريع لكل العراق</span>
+  </div>
+
+  <header class="sticky top-0 z-40 bg-[#fcfcfb]/90 backdrop-blur-xl border-b border-gray-200/50 transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <a href="#" class="flex items-center gap-3 group">
+          <img src="https://img.alwandoilpress.com/%D8%A7%D9%84%D9%88%D9%86%D8%AF%20%D9%85%D8%B9%D8%AF%D9%84.png" alt="Alwand" referrerpolicy="no-referrer" class="h-11 w-auto transition-transform duration-500 group-hover:scale-105">
+          <div class="hidden sm:block">
+            <h1 id="brand-title" class="font-heading font-bold text-xl text-gray-900 leading-tight">معصرة الوند</h1>
+            <p id="brand-subtitle" class="text-[10px] text-gray-500 font-medium">للزيوت الطبيعية والعناية المتكاملة</p>
+          </div>
+        </a>
+      </div>
+      <div class="hidden md:flex items-center gap-8 text-sm font-bold text-gray-500">
+        <a href="#catalog" class="nav-link hover:text-gray-900 transition-colors" id="nav-shop">المتجر</a>
+        <a href="#tips" class="nav-link hover:text-gray-900 transition-colors" id="nav-tips">أسرار الزيوت</a>
+        <a href="#about" class="nav-link hover:text-gray-900 transition-colors" id="nav-about">قصتنا</a>
+        <a href="#contact" class="nav-link hover:text-gray-900 transition-colors" id="nav-contact">اتصل بنا</a>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="bg-white border border-gray-200 p-1 rounded-full flex items-center text-xs font-bold shadow-sm">
+          <button type="button" onclick="setLanguage('ar')" id="lang-ar" class="px-3 py-1.5 rounded-full transition-all">عربي</button>
+          <button type="button" onclick="setLanguage('ku')" id="lang-ku" class="px-3 py-1.5 rounded-full transition-all">کوردی</button>
+          <button type="button" onclick="setLanguage('en')" id="lang-en" class="px-3 py-1.5 rounded-full transition-all">EN</button>
+        </div>
+        <button type="button" onclick="openCart()" class="relative bg-gray-900 text-white px-5 py-2.5 rounded-full font-bold text-sm flex items-center gap-2 hover:bg-gray-800 transition-colors shadow-md">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+          <span id="header-cart-label" class="hidden sm:inline">السلة</span>
+          <span id="header-cart-count" class="bg-brand-green text-white font-black text-[10px] px-2 py-0.5 rounded-full min-w-[1.2rem] text-center inline-block">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- (hero, tips, catalog, about, contact, footer, cart modal — identical to your original, unchanged) -->
+  <!-- ... paste your original sections here ... -->
+
+  <div id="toast-container"></div>
+
+  <script>
+    /* ============ All your existing constants / translations / tips ============ */
+    /* Copy them verbatim from your current file — nothing changes there.         */
+    const DELIVERY_FEES = { khanaqin_inside: 2000, khanaqin_villages: 3000, diyala: 3000, iraq: 5000 };
+    const CATEGORY_TRANSLATIONS = { /* … unchanged … */ };
+    const translations = { /* … unchanged … */ };
+    const OIL_TIPS = [ /* … unchanged … */ ];
+
+    let products = [];
+    let currentLang = 'ar', currentCategory = 'all', searchQuery = '', selectedVariants = {}, cart = [], selectedDeliveryZone = 'khanaqin_inside';
+
+    /* ---- helpers (unchanged) ---- */
+    function sanitizeTextField(v, fb='') { if (v===null||v===undefined) return fb; const s=String(v).trim(); if(!s||s.startsWith('http')) return fb; return s; }
+    function parsePriceNum(v, fb=0) { if (typeof v==='number'&&!isNaN(v)) return v; if(!v) return fb; const n=Number(String(v).replace(/[^0-9.]/g,'')); return (!isNaN(n)&&n>0)?n:fb; }
+    function parseStockBool(v, fb=false) {
+      if (v===true||v===1) return true;
+      if (v===false||v===0) return false;
+      const s=String(v===null||v===undefined?'':v).trim().toUpperCase();
+      if (s==='TRUE'||s==='1'||s==='YES'||s==='Y') return true;
+      if (s==='FALSE'||s==='0'||s==='NO'||s==='N') return false;
+      return fb;
+    }
+    function normalizeDriveImageUrl(u, fb='') { /* … unchanged … */ }
+    function handleImageError(img) { img.onerror=null; img.src='https://placehold.co/400x400/f4f4f2/1a1a1a?text=Image+Error'; }
+    function normalizeKey(k) { return String(k).toLowerCase().replace(/[^a-z0-9]/g,''); }
+    function buildLookup(item) { const m={}; Object.keys(item).forEach(k=>{const n=normalizeKey(k); if(n&&!(n in m)) m[n]=item[k];}); return m; }
+    function pick(m,names) { for (let i=0;i<names.length;i++){const v=m[names[i]]; if(v!==undefined&&v!==null&&String(v).trim()!=='') return v;} return ''; }
+
+    /* ================= FIXED: use fetch instead of google.script.run ================= */
+    async function syncProducts() {
+      try {
+        const resp = await fetch('/api/getProducts', { cache: 'no-store' });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const data = await resp.json();
+
+        if (data && data.error) { console.warn('SHEET ERROR:', data.error); return; }
+        if (!Array.isArray(data) || data.length === 0) return;
+
+        const upd = [];
+        const usedIds = new Set();
+
+        data.forEach((item, idx) => {
+          const m = buildLookup(item);
+          const ar = sanitizeTextField(pick(m, ['namear']), '');
+          if (!ar) return;
+
+          let id = parseInt(String(pick(m, ['id','itemid'])).trim(), 10);
+          if (isNaN(id) || usedIds.has(id)) id = 1000 + idx;
+          while (usedIds.has(id)) id += 1000;
+          usedIds.add(id);
+
+          const rawImg = pick(m, ['imageurl1','imageurl','image','img','photo']);
+          const img = normalizeDriveImageUrl(rawImg);
+
+          const s1 = sanitizeTextField(pick(m, ['size1']), null);
+          const s2 = sanitizeTextField(pick(m, ['size2']), null);
+          const s3 = sanitizeTextField(pick(m, ['size3']), null);
+
+          const p1 = s1 ? parsePriceNum(pick(m, ['price1']), 0) : null;
+          const p2 = s2 ? parsePriceNum(pick(m, ['price2']), 0) : null;
+          const p3 = s3 ? parsePriceNum(pick(m, ['price3']), 0) : null;
+
+          const st1 = s1 ? parseStockBool(pick(m, ['instock','instock1']), false) : false;
+          const st2 = s2 ? parseStockBool(pick(m, ['instock2']), false) : false;
+          const st3 = s3 ? parseStockBool(pick(m, ['instock3']), false) : false;
+
+          let discountPct = 0;
+          const dRaw = pick(m, ['discount']);
+          if (dRaw !== '') {
+            if (typeof dRaw === 'number' && dRaw > 0 && dRaw < 1) discountPct = Math.round(dRaw * 100);
+            else { const mt = String(dRaw).match(/(\d+(\.\d+)?)/); if (mt) discountPct = Math.min(100, Math.round(parseFloat(mt[1]))); }
+          }
+
+          upd.push({
+            id, category: sanitizeTextField(pick(m, ['category']), 'زيوت طبيعية'),
+            name_ar: ar,
+            name_ku: sanitizeTextField(pick(m, ['nameku']), ar),
+            name_en: sanitizeTextField(pick(m, ['nameen']), ar),
+            desc_ar: sanitizeTextField(pick(m, ['descriptionar']), ''),
+            desc_ku: sanitizeTextField(pick(m, ['descriptionku']), ''),
+            desc_en: sanitizeTextField(pick(m, ['descriptionen']), ''),
+            size1: s1, price1: p1, image1: img, in_stock1: st1,
+            size2: s2, price2: p2, in_stock2: st2,
+            size3: s3, price3: p3, in_stock3: st3,
+            discount_sizes: { 1: discountPct, 2: discountPct, 3: discountPct }
+          });
+        });
+
+        if (upd.length > 0) {
+          products = upd;
+          cart = cart.filter(it => products.some(p => p.id === it.productId));
+          initDefaultVariants(true);
+          renderCategoryFilters();
+          renderProducts(false);
+          renderCart();
+        }
+      } catch (e) {
+        console.error('syncProducts failed:', e);
+      }
+    }
+
+    /* … all the other render / cart / language functions stay exactly the same … */
+
+    /* ================= FIXED: submitOrder via fetch ================= */
+    async function submitOrder() {
+      const t = translations[currentLang];
+      if (cart.length === 0) { showFeedback(t.errEmptyCart, true); return; }
+      const name = document.getElementById('cust-name').value.trim();
+      const phone = document.getElementById('cust-phone').value.trim();
+      const address = document.getElementById('cust-address').value.trim();
+      const landmark = document.getElementById('cust-landmark').value.trim();
+      if (!name || !phone || !address) { showFeedback(t.errMissingFields, true); return; }
+
+      const zoneSel = document.getElementById('delivery-zone');
+      const zoneLabel = zoneSel.options[zoneSel.selectedIndex].text;
+      const fee = DELIVERY_FEES[selectedDeliveryZone] || 2000;
+
+      const sub = cart.reduce((s, item) => {
+        const p = products.find(x => x.id === item.productId);
+        return p ? s + getVariantDetails(p, item.variantNum).price * item.quantity : s;
+      }, 0);
+
+      const grand = sub + fee;
+      const orderId = '#ALW-' + Date.now().toString(36).toUpperCase().slice(-6);
+      const summary = cart.map(item => {
+        const p = products.find(x => x.id === item.productId);
+        if (!p) return '';
+        const v = getVariantDetails(p, item.variantNum);
+        return `${p.name_ar} (${v.size}) × ${item.quantity}`;
+      }).filter(Boolean).join(' | ');
+
+      const btn = document.getElementById('btn-submit-order');
+      btn.disabled = true;
+      const oldTxt = btn.querySelector('span').textContent;
+      btn.querySelector('span').textContent = '...';
+
+      try {
+        const resp = await fetch('/api/submitOrder', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderId, name, phone, zoneName: zoneLabel, deliveryFee: fee,
+            address, landmark, itemsSummary: summary, grandTotal: grand
+          }),
+        });
+        const res = await resp.json();
+
+        if (res && res.success) {
+          showFeedback(t.orderSuccess, false);
+          cart = []; renderCart();
+          ['cust-name','cust-phone','cust-address','cust-landmark'].forEach(id => document.getElementById(id).value = '');
+        } else {
+          showFeedback((res && res.error) || t.orderFailed, true);
+        }
+      } catch (e) {
+        showFeedback(t.orderFailed, true);
+      } finally {
+        btn.disabled = false;
+        btn.querySelector('span').textContent = oldTxt;
+      }
+    }
+
+    /* boot */
+    renderRandomTips();
+    setLanguage('ar');
+    syncProducts();
+  </script>
+</body>
+</html>
