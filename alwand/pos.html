@@ -35,7 +35,10 @@
       <h2 class="font-heading text-2xl font-bold text-slate-900 mb-1">معصرة الوند</h2>
       <p class="text-xs text-slate-500 mb-6">أدخل رمز الدخول (PIN) لبدء الجلسة</p>
 
-      <div class="flex justify-center gap-3 mb-6">
+      <div class="space-y-3 mb-4 max-w-[240px] mx-auto">
+  <input type="text" id="login-username" placeholder="اسم المستخدم" class="w-full text-center text-sm font-bold py-2.5 bg-slate-50 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600" />
+  <input type="password" id="pin-display" readonly maxlength="4" placeholder="••••" class="w-full text-center text-2xl font-black tracking-[0.5em] py-2 bg-slate-50 border-2 border-slate-200 rounded-xl focus:outline-none" />
+</div>
         <input type="password" id="pin-display" readonly maxlength="4" class="w-48 text-center text-3xl font-black tracking-[0.5em] py-2 bg-slate-50 border-2 border-slate-200 rounded-xl focus:outline-none" />
       </div>
 
@@ -704,17 +707,18 @@
     }
 
     async function submitPinAuth() {
-      const errEl = document.getElementById('auth-err');
-      const btn = document.getElementById('pin-login-btn');
-      if (pinBuffer.length < 4) return;
+      const name = document.getElementById('login-username').value.trim();
+if (!name || pinBuffer.length < 4) {
+  errEl.textContent = 'يرجى إدخال اسم المستخدم ورمز PIN';
+  errEl.classList.remove('hidden');
+  return;
+}
 
-      btn.disabled = true;
-      try {
-        const res = await fetch('/api/auth', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pin: pinBuffer })
-        });
+const res = await fetch('/api/auth', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ name, pin: pinBuffer })
+});
         const data = await res.json();
 
         if (res.ok && data.success) {
