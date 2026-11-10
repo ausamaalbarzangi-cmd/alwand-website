@@ -93,7 +93,7 @@
   </header>
 
   <!-- ==================== VIEW 1: POS REGISTER ==================== -->
-  <main id="view-pos" class="flex-1 flex overflow-hidden">
+  <main id="view-pos" class="flex-1 flex flex-col lg:flex-row overflow-hidden">
     <!-- Catalog Area -->
     <div class="flex-1 flex flex-col p-4 overflow-hidden border-l border-slate-200">
       
@@ -107,11 +107,11 @@
       </div>
 
       <!-- Products Grid -->
-      <div id="pos-grid" class="flex-1 overflow-y-auto grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 pr-1"></div>
+      <div id="pos-grid" class="flex-1 overflow-y-auto grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 pr-1 content-start auto-rows-max"></div>
     </div>
 
     <!-- Register Drawer -->
-    <aside class="w-96 md:w-[430px] bg-white flex flex-col h-full shadow-xl flex-shrink-0">
+    <aside class="w-full lg:w-[380px] xl:w-[420px] bg-white flex flex-col h-1/2 lg:h-full shadow-xl flex-shrink-0 border-t lg:border-t-0 lg:border-r border-slate-200">
       
       <!-- Order Mode: In-Store vs Delivery -->
       <div class="p-3 bg-slate-50 border-b border-slate-200">
