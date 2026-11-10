@@ -1353,7 +1353,7 @@
       }
 
       container.innerHTML = orders.map(o => {
-        const isRet = o.status === 'returned';
+        const isRet = o.status === 'returned' || o.status === 'cancelled';
         const cardBg = isRet ? 'bg-rose-50 border-rose-200' : 'bg-white border-slate-200';
         const tag = isRet 
           ? `<span class="bg-rose-600 text-white font-black text-[10px] px-2.5 py-0.5 rounded-full">مرتجع (ملغاة)</span>` 
