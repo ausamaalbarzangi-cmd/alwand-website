@@ -26,38 +26,36 @@
 </head>
 <body class="bg-slate-100 text-slate-800 h-screen flex flex-col overflow-hidden">
 
-  <!-- ==================== PIN AUTH OVERLAY ==================== -->
+  <!-- ==================== PIN + USERNAME AUTH OVERLAY ==================== -->
   <div id="auth-modal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center border border-slate-100">
       <div class="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
       </div>
       <h2 class="font-heading text-2xl font-bold text-slate-900 mb-1">معصرة الوند</h2>
-      <p class="text-xs text-slate-500 mb-6">أدخل رمز الدخول (PIN) لبدء الجلسة</p>
+      <p class="text-xs text-slate-500 mb-5">تسجيل الدخول إلى نقطة البيع</p>
 
-      <div class="space-y-3 mb-4 max-w-[240px] mx-auto">
-  <input type="text" id="login-username" placeholder="اسم المستخدم" class="w-full text-center text-sm font-bold py-2.5 bg-slate-50 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600" />
-  <input type="password" id="pin-display" readonly maxlength="4" placeholder="••••" class="w-full text-center text-2xl font-black tracking-[0.5em] py-2 bg-slate-50 border-2 border-slate-200 rounded-xl focus:outline-none" />
-</div>
-        <input type="password" id="pin-display" readonly maxlength="4" class="w-48 text-center text-3xl font-black tracking-[0.5em] py-2 bg-slate-50 border-2 border-slate-200 rounded-xl focus:outline-none" />
+      <div class="space-y-2.5 mb-4 max-w-[240px] mx-auto">
+        <input type="text" id="login-username" value="Ausama" placeholder="اسم المستخدم" class="w-full text-center text-sm font-bold py-2 bg-slate-50 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600" />
+        <input type="password" id="pin-display" readonly maxlength="4" placeholder="••••" class="w-full text-center text-2xl font-black tracking-[0.5em] py-2 bg-slate-50 border-2 border-slate-200 rounded-xl focus:outline-none" />
       </div>
 
       <div class="grid grid-cols-3 gap-2.5 max-w-[240px] mx-auto mb-4">
-        <button onclick="pressPin('1')" class="h-14 bg-slate-100 hover:bg-slate-200 active:scale-95 text-xl font-bold rounded-2xl">1</button>
-        <button onclick="pressPin('2')" class="h-14 bg-slate-100 hover:bg-slate-200 active:scale-95 text-xl font-bold rounded-2xl">2</button>
-        <button onclick="pressPin('3')" class="h-14 bg-slate-100 hover:bg-slate-200 active:scale-95 text-xl font-bold rounded-2xl">3</button>
-        <button onclick="pressPin('4')" class="h-14 bg-slate-100 hover:bg-slate-200 active:scale-95 text-xl font-bold rounded-2xl">4</button>
-        <button onclick="pressPin('5')" class="h-14 bg-slate-100 hover:bg-slate-200 active:scale-95 text-xl font-bold rounded-2xl">5</button>
-        <button onclick="pressPin('6')" class="h-14 bg-slate-100 hover:bg-slate-200 active:scale-95 text-xl font-bold rounded-2xl">6</button>
-        <button onclick="pressPin('7')" class="h-14 bg-slate-100 hover:bg-slate-200 active:scale-95 text-xl font-bold rounded-2xl">7</button>
-        <button onclick="pressPin('8')" class="h-14 bg-slate-100 hover:bg-slate-200 active:scale-95 text-xl font-bold rounded-2xl">8</button>
-        <button onclick="pressPin('9')" class="h-14 bg-slate-100 hover:bg-slate-200 active:scale-95 text-xl font-bold rounded-2xl">9</button>
-        <button onclick="clearPin()" class="h-14 bg-rose-50 text-rose-600 hover:bg-rose-100 active:scale-95 text-xs font-bold rounded-2xl">مسح</button>
-        <button onclick="pressPin('0')" class="h-14 bg-slate-100 hover:bg-slate-200 active:scale-95 text-xl font-bold rounded-2xl">0</button>
-        <button onclick="submitPinAuth()" id="pin-login-btn" class="h-14 bg-emerald-600 hover:bg-emerald-700 text-white active:scale-95 text-sm font-bold rounded-2xl">دخول</button>
+        <button onclick="pressPin('1')" class="h-12 bg-slate-100 hover:bg-slate-200 active:scale-95 text-lg font-bold rounded-2xl">1</button>
+        <button onclick="pressPin('2')" class="h-12 bg-slate-100 hover:bg-slate-200 active:scale-95 text-lg font-bold rounded-2xl">2</button>
+        <button onclick="pressPin('3')" class="h-12 bg-slate-100 hover:bg-slate-200 active:scale-95 text-lg font-bold rounded-2xl">3</button>
+        <button onclick="pressPin('4')" class="h-12 bg-slate-100 hover:bg-slate-200 active:scale-95 text-lg font-bold rounded-2xl">4</button>
+        <button onclick="pressPin('5')" class="h-12 bg-slate-100 hover:bg-slate-200 active:scale-95 text-lg font-bold rounded-2xl">5</button>
+        <button onclick="pressPin('6')" class="h-12 bg-slate-100 hover:bg-slate-200 active:scale-95 text-lg font-bold rounded-2xl">6</button>
+        <button onclick="pressPin('7')" class="h-12 bg-slate-100 hover:bg-slate-200 active:scale-95 text-lg font-bold rounded-2xl">7</button>
+        <button onclick="pressPin('8')" class="h-12 bg-slate-100 hover:bg-slate-200 active:scale-95 text-lg font-bold rounded-2xl">8</button>
+        <button onclick="pressPin('9')" class="h-12 bg-slate-100 hover:bg-slate-200 active:scale-95 text-lg font-bold rounded-2xl">9</button>
+        <button onclick="clearPin()" class="h-12 bg-rose-50 text-rose-600 hover:bg-rose-100 active:scale-95 text-xs font-bold rounded-2xl">مسح</button>
+        <button onclick="pressPin('0')" class="h-12 bg-slate-100 hover:bg-slate-200 active:scale-95 text-lg font-bold rounded-2xl">0</button>
+        <button onclick="submitPinAuth()" id="pin-login-btn" class="h-12 bg-emerald-600 hover:bg-emerald-700 text-white active:scale-95 text-xs font-bold rounded-2xl">دخول</button>
       </div>
 
-      <div id="auth-err" class="text-xs font-bold text-rose-600 hidden">رمز الدخول غير صحيح</div>
+      <div id="auth-err" class="text-xs font-bold text-rose-600 hidden">اسم المستخدم أو الرمز غير صحيح</div>
     </div>
   </div>
 
@@ -94,23 +92,22 @@
 
   <!-- ==================== VIEW 1: POS REGISTER ==================== -->
   <main id="view-pos" class="flex-1 flex flex-col lg:flex-row overflow-hidden">
+    
     <!-- Catalog Area -->
-    <div class="flex-1 flex flex-col p-4 overflow-hidden border-l border-slate-200">
-      
-      <!-- Top Filters & Barcode Scan -->
+    <div class="flex-1 flex flex-col p-4 overflow-hidden border-b lg:border-b-0 lg:border-l border-slate-200">
       <div class="flex items-center gap-3 mb-4 flex-shrink-0">
         <div class="relative flex-1">
           <svg class="w-4 h-4 text-slate-400 absolute right-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
-          <input type="text" id="pos-search" oninput="handlePosSearch(this.value)" onkeydown="checkBarcodeScan(event)" placeholder="ابحث باسم الزيت أو امسح الباركود مباشرة..." class="w-full bg-white border border-slate-200 rounded-2xl pr-10 pl-4 py-2 text-sm focus:outline-none focus:border-emerald-600" />
+          <input type="text" id="pos-search" oninput="handlePosSearch(this.value)" onkeydown="checkBarcodeScan(event)" placeholder="ابحث باسم الزيت أو امسح الباركود..." class="w-full bg-white border border-slate-200 rounded-2xl pr-10 pl-4 py-2 text-sm focus:outline-none focus:border-emerald-600" />
         </div>
         <div id="category-tabs" class="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-lg"></div>
       </div>
 
-      <!-- Products Grid -->
+      <!-- Locked card rows to avoid elongation -->
       <div id="pos-grid" class="flex-1 overflow-y-auto grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 pr-1 content-start auto-rows-max"></div>
     </div>
 
-    <!-- Register Drawer -->
+    <!-- Responsive Register Drawer -->
     <aside class="w-full lg:w-[380px] xl:w-[420px] bg-white flex flex-col h-1/2 lg:h-full shadow-xl flex-shrink-0 border-t lg:border-t-0 lg:border-r border-slate-200">
       
       <!-- Order Mode: In-Store vs Delivery -->
@@ -124,22 +121,20 @@
           </button>
         </div>
 
-        <!-- Delivery Fields (Only visible in delivery mode) -->
         <div id="delivery-details-box" class="hidden space-y-2 pt-2 border-t border-slate-200">
           <div>
             <label class="block text-[10px] font-bold text-slate-500 mb-1">منطقة التوصيل:</label>
             <select id="pos-delivery-zone" onchange="updateDeliveryFeeFromZone()" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none focus:border-emerald-600">
-              <option value="2000" data-zone-id="1">خانقين - داخل المدينة (2,000 د.ع)</option>
-              <option value="3000" data-zone-id="2">خانقين - أطراف ونواحي (3,000 د.ع)</option>
-              <option value="3000" data-zone-id="3">محافظة ديالى (3,000 د.ع)</option>
-              <option value="5000" data-zone-id="4">بغداد وكافة المحافظات (5,000 د.ع)</option>
+              <option value="2000">خانقين - داخل المدينة (2,000 د.ع)</option>
+              <option value="3000">خانقين - أطراف ونواحي (3,000 د.ع)</option>
+              <option value="3000">محافظة ديالى (3,000 د.ع)</option>
+              <option value="5000">بغداد وكافة المحافظات (5,000 د.ع)</option>
             </select>
           </div>
-          <input type="text" id="pos-delivery-address" placeholder="العنوان التفصيلي (المنطقة / الشارع)" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none focus:border-emerald-600" />
+          <input type="text" id="pos-delivery-address" placeholder="العنوان التفصيلي" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none focus:border-emerald-600" />
           <input type="text" id="pos-delivery-landmark" placeholder="أقرب نقطة دالة" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none focus:border-emerald-600" />
         </div>
 
-        <!-- Optional Customer Section Toggle -->
         <div class="mt-2 pt-2 border-t border-slate-200/60">
           <button type="button" onclick="toggleCustomerDrawer()" class="flex justify-between items-center w-full text-xs font-bold text-slate-600 hover:text-slate-900">
             <span>👤 بيانات الزبون (اختياري)</span>
@@ -164,7 +159,6 @@
 
       </div>
 
-      <!-- Cart Header -->
       <div class="p-3 border-b border-slate-100 flex items-center justify-between">
         <div class="flex items-center gap-2">
           <h2 class="font-heading font-bold text-sm text-slate-900">سجل البيع</h2>
@@ -173,10 +167,8 @@
         <button onclick="clearCart()" class="text-xs font-bold text-slate-400 hover:text-rose-600">إفراغ</button>
       </div>
 
-      <!-- Items List -->
       <div id="pos-cart-list" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
 
-      <!-- Totals & Pay -->
       <div class="p-4 bg-slate-50 border-t border-slate-200 space-y-3">
         <div class="space-y-1 text-xs font-bold">
           <div class="flex justify-between text-slate-500">
@@ -280,7 +272,6 @@
       </button>
     </div>
 
-    <!-- Inventory Table -->
     <div class="flex-1 overflow-y-auto border border-slate-200 rounded-2xl">
       <table class="w-full text-right text-xs">
         <thead class="bg-slate-50 border-b border-slate-200 sticky top-0 font-bold text-slate-600">
@@ -302,7 +293,7 @@
   <main id="view-customers" class="flex-1 flex flex-col p-6 overflow-hidden hidden bg-white">
     <div class="max-w-4xl mx-auto w-full flex flex-col h-full">
       <h2 class="font-heading text-2xl font-bold text-slate-900 mb-1">سجل وبيانات الزبائن</h2>
-      <p class="text-xs text-slate-500 mb-6">البحث برقم الهاتف، استعراض المشتريات السابقة، العناوين، وملاحظات التعامل</p>
+      <p class="text-xs text-slate-500 mb-6">البحث برقم الهاتف، استعراض المشتريات السابقة، والعناوين</p>
 
       <div class="flex gap-2 mb-6">
         <input type="tel" id="crm-search-phone" placeholder="أدخل رقم هاتف الزبون (07...)" dir="ltr" class="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-emerald-600" />
@@ -346,7 +337,6 @@
   <main id="view-reports" class="flex-1 flex flex-col p-6 overflow-y-auto hidden bg-white">
     <div class="max-w-6xl mx-auto w-full space-y-6">
       
-      <!-- Date Filters -->
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200">
         <div>
           <h2 class="font-heading text-2xl font-bold text-slate-900">سجل المعاملات والأرباح</h2>
@@ -360,7 +350,6 @@
         </div>
       </div>
 
-      <!-- KPI Summary Cards -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl">
           <span class="text-xs font-bold text-emerald-800 block">إجمالي المبيعات النشطة</span>
@@ -380,7 +369,6 @@
         </div>
       </div>
 
-      <!-- Structured Individual Transactions List -->
       <div class="border border-slate-200 rounded-2xl p-4">
         <div class="flex justify-between items-center mb-4">
           <h3 class="font-bold text-sm text-slate-900">سجل فواتير البيع المنفصلة (Transactions)</h3>
@@ -434,7 +422,6 @@
       <div class="flex-1 overflow-y-auto p-6 space-y-4">
         <input type="hidden" id="edit-prod-id" />
 
-        <!-- Category Combobox -->
         <div>
           <label class="block text-xs font-bold text-slate-600 mb-1">التصنيف:</label>
           <div class="relative">
@@ -443,7 +430,6 @@
           </div>
         </div>
 
-        <!-- Name Inputs -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label class="block text-xs font-bold text-slate-600 mb-1">الاسم بالعربي *:</label>
@@ -459,13 +445,11 @@
           </div>
         </div>
 
-        <!-- Main Image -->
         <div>
           <label class="block text-xs font-bold text-slate-600 mb-1">رابط الصورة الرئيسية للمنتج:</label>
           <input type="url" id="edit-prod-main-img" placeholder="https://..." dir="ltr" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-600" />
         </div>
 
-        <!-- Bundle Configuration Toggle -->
         <div class="bg-amber-50 border border-amber-200 p-3 rounded-2xl">
           <label class="flex items-center gap-2 text-xs font-bold text-amber-900 cursor-pointer">
             <input type="checkbox" id="edit-prod-is-bundle" onchange="toggleBundleSection(this.checked)" class="w-4 h-4 text-amber-600 rounded" />
@@ -477,13 +461,11 @@
           </div>
         </div>
 
-        <!-- Description -->
         <div>
           <label class="block text-xs font-bold text-slate-600 mb-1">الوصف بالعربي:</label>
           <textarea id="edit-prod-desc-ar" rows="2" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:outline-none focus:border-emerald-600"></textarea>
         </div>
 
-        <!-- Size Variants -->
         <div class="border-t border-slate-200 pt-4">
           <div class="flex justify-between items-center mb-3">
             <h4 class="font-bold text-xs text-slate-900">الأحجام، الأسعار، العروض، والمخزون</h4>
@@ -677,7 +659,7 @@
     </div>
   </div>
 
-  <!-- ==================== MAIN JAVASCRIPT ENGINE ==================== -->
+  <!-- ==================== JAVASCRIPT ENGINE ==================== -->
   <script>
     let catalog = [];
     let currentCategory = 'all';
@@ -691,7 +673,7 @@
     let activeReturnOrder = null;
     let allTransactionsCache = [];
 
-    // --- 1. PIN Authentication ---
+    // --- 1. PIN & User Auth ---
     function pressPin(d) {
       if (pinBuffer.length < 4) {
         pinBuffer += d;
@@ -707,18 +689,24 @@
     }
 
     async function submitPinAuth() {
+      const errEl = document.getElementById('auth-err');
+      const btn = document.getElementById('pin-login-btn');
       const name = document.getElementById('login-username').value.trim();
-if (!name || pinBuffer.length < 4) {
-  errEl.textContent = 'يرجى إدخال اسم المستخدم ورمز PIN';
-  errEl.classList.remove('hidden');
-  return;
-}
 
-const res = await fetch('/api/auth', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ name, pin: pinBuffer })
-});
+      if (!name) {
+        errEl.textContent = 'يرجى كتابة اسم المستخدم';
+        errEl.classList.remove('hidden');
+        return;
+      }
+      if (pinBuffer.length < 4) return;
+
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: name, pin: pinBuffer })
+        });
         const data = await res.json();
 
         if (res.ok && data.success) {
@@ -733,7 +721,6 @@ const res = await fetch('/api/auth', {
           document.getElementById('auth-modal').classList.add('hidden');
           clearPin();
 
-          // Role & Permissions Visibility
           const isManager = data.staff.role === 'manager';
           const perms = data.staff.permissions || [];
 
@@ -745,7 +732,7 @@ const res = await fetch('/api/auth', {
 
           loadCatalog();
         } else {
-          errEl.textContent = data.error || 'رمز الدخول غير صحيح';
+          errEl.textContent = data.error || 'اسم المستخدم أو الرمز غير صحيح';
           errEl.classList.remove('hidden');
           clearPin();
         }
@@ -807,7 +794,6 @@ const res = await fetch('/api/auth', {
         posBtn.className = 'py-2 rounded-xl text-xs font-bold border border-slate-200 text-slate-600 bg-white transition';
         delBox.classList.remove('hidden');
         feeRow.classList.remove('hidden');
-        // Automatically expand customer drawer if delivery is active
         document.getElementById('customer-drawer').classList.remove('hidden');
         document.getElementById('cust-toggle-icon').textContent = '－';
       }
