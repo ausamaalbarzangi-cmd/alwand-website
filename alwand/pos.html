@@ -1145,7 +1145,8 @@
           clearSaleCustomer();
           loadCatalog();
         } else {
-          alert('خطأ: ' + (result.error || result.message));
+          const errMsg = result.message ? `${result.error}: ${result.message}` : (result.error || 'فشل إتمام البيع');
+alert('خطأ: ' + errMsg);
         }
       } catch (err) {
         alert('تعذر الاتصال بالخادم');
