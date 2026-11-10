@@ -119,21 +119,21 @@ export async function onRequest(context) {
     }
 
     if (method === "POST" && path === "auth") {
-      const body = await request.json();
-      const pin = body.pin;
+  const body = await request.json();
+  const { name, pin } = body;
 
-      if (!pin) {
-        return jsonResponse({ error: "PIN is required" }, 400);
-      }
+  if (!name || !pin) {
+    return jsonResponse({ error: "اسم المستخدم والرمز السري مطلوبان" }, 400);
+  }
 
-      const inputHash = await hashPin(pin);
-      const staffMember = await db.prepare(
-        "SELECT id, name, role, permissions FROM staff WHERE pin_hash = ? AND is_active = 1"
-      ).bind(inputHash).first();
+  const inputHash = await hashPin(pin);
+  const staffMember = await db.prepare(
+    "SELECT id, name, role, permissions FROM staff WHERE LOWER(TRIM(name)) = LOWER(TRIM(?)) AND pin_hash = ? AND is_active = 1"
+  ).bind(name, inputHash).first();
 
-      if (!staffMember) {
-        return jsonResponse({ error: "رمز الدخول غير صحيح" }, 401);
-      }
+  if (!staffMember) {
+    return jsonResponse({ error: "اسم المستخدم أو الرمز السري غير صحيح" }, 401);
+  }
 
       let perms = [];
       try {
@@ -233,9 +233,9 @@ export async function onRequest(context) {
         for (const item of returned_items) {
           if (item.variant_id && item.quantity > 0) {
             batchStatements.push(
-              db.prepare(
-                "UPDATE product_variants SET stock_quantity = stock_quantity + ? WHERE id = ? AND stock_quantity IS NOT NULL"
-              ).bind(item.quantity, item.variant_id)
+             db.prepare(
+  "UPDATE product_variants SET stock_quantity = COALESCE(stock_quantity, 0) + ? WHERE id = ?"
+).bind(item.quantity, item.variant_id)
             );
           }
         }
@@ -376,9 +376,19 @@ export async function onRequest(context) {
         subtotal += Number(item.unit_price_iqd) * Number(item.quantity);
       }
 
-      const deliveryFee = Number(body.delivery_fee_iqd) || 0;
-      const discount = Number(body.discount_iqd) || 0;
-      const total = subtotal + deliveryFee - discount;
+      subtotal,
+deliveryFee,
+discount,
+total,
+body.payment_method || "cash",
+cashTendered !== null ? cashTendered : total,
+changeDue !== null ? changeDue : 0,
+body.customer_name || null,
+body.customer_phone || null,
+body.zone_id || null,
+body.address || null,
+body.landmark || null,
+body.notes || null
 
       const cashTendered = body.cash_tendered_iqd !== undefined && body.cash_tendered_iqd !== null ? Number(body.cash_tendered_iqd) : null;
       const changeDue = cashTendered !== null ? Math.max(0, cashTendered - total) : null;
