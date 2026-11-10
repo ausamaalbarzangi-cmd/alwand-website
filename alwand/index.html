@@ -718,33 +718,89 @@
     }
 
     async function submitOrder() {
-      const t = translations[currentLang];
-      if (cart.length === 0) { showFeedback(t.errEmptyCart, true); return; }
-      const name = document.getElementById('cust-name').value.trim(), phone = document.getElementById('cust-phone').value.trim(), address = document.getElementById('cust-address').value.trim(), landmark = document.getElementById('cust-landmark').value.trim();
-      if (!name || !phone || !address) { showFeedback(t.errMissingFields, true); return; }
-      
-      const zoneSel = document.getElementById('delivery-zone'), zoneLabel = zoneSel.options[zoneSel.selectedIndex].text, fee = DELIVERY_FEES[selectedDeliveryZone] || 2000;
-      const sub = cart.reduce((s, item) => { const p = products.find(x => x.id === item.productId); if (!p) return s; return s + getVariantDetails(p, item.variantNum).price * item.quantity; }, 0);
-      const grand = sub + fee, orderId = '#ALW-' + Date.now().toString(36).toUpperCase().slice(-6);
-      const summary = cart.map(item => { const p = products.find(x => x.id === item.productId); if (!p) return ''; const v = getVariantDetails(p, item.variantNum); return p.name_ar + ' (' + v.size + ') × ' + item.quantity; }).filter(Boolean).join(' | ');
-      
-      const btn = document.getElementById('btn-submit-order'); btn.disabled = true; const oldTxt = btn.querySelector('span').textContent; btn.querySelector('span').textContent = '...';
-      
-      try {
-        const res = await fetch('/api/submitOrder', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderId, name, phone, zoneName: zoneLabel, deliveryFee: fee, address, landmark, itemsSummary: summary, grandTotal: grand })
-        }).then(r => r.json());
-        
-        if (res.success) {
-          showFeedback(t.orderSuccess, false); cart = []; renderCart();
-          document.getElementById('cust-name').value = ''; document.getElementById('cust-phone').value = ''; document.getElementById('cust-address').value = ''; document.getElementById('cust-landmark').value = '';
-        } else {
-          showFeedback(res.error || t.orderFailed, true);
-        }
-      } catch (e) { showFeedback(t.orderFailed, true); } finally { btn.disabled = false; btn.querySelector('span').textContent = oldTxt; }
+  const t = translations[currentLang];
+  if (cart.length === 0) {
+    showFeedback(t.errEmptyCart, true);
+    return;
+  }
+
+  const name = document.getElementById('cust-name').value.trim();
+  const phone = document.getElementById('cust-phone').value.trim();
+  const address = document.getElementById('cust-address').value.trim();
+  const landmark = document.getElementById('cust-landmark').value.trim();
+
+  if (!name || !phone || !address) {
+    showFeedback(t.errMissingFields, true);
+    return;
+  }
+
+  const subtotal = cart.reduce((s, item) => {
+    const p = products.find(x => x.id === item.productId);
+    if (!p) return s;
+    return s + getVariantDetails(p, item.variantNum).price * item.quantity;
+  }, 0);
+
+  const deliveryFee = DELIVERY_FEES[selectedDeliveryZone] || 2000;
+
+  // Format line items for D1 schema
+  const items = cart.map(item => {
+    const p = products.find(x => x.id === item.productId);
+    const v = getVariantDetails(p, item.variantNum);
+    return {
+      variant_id: v.variant_id || null,
+      product_name_ar: p.name_ar,
+      size_label: formatSizeLabel(v.size),
+      unit_price_iqd: v.price,
+      quantity: item.quantity
+    };
+  });
+
+  const btn = document.getElementById('btn-submit-order');
+  btn.disabled = true;
+  const oldTxt = btn.textContent;
+  btn.textContent = '...';
+
+  try {
+    const res = await fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        channel: 'web',
+        customer_name: name,
+        customer_phone: phone,
+        address: address,
+        landmark: landmark,
+        delivery_fee_iqd: deliveryFee,
+        payment_method: 'cod',
+        items: items
+      })
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      showFeedback(t.orderSuccess + (data.order_number ? ` (#${data.order_number})` : ''), false);
+      cart = [];
+      renderCart();
+      setTimeout(() => {
+        closeCart();
+        document.getElementById('cust-name').value = '';
+        document.getElementById('cust-phone').value = '';
+        document.getElementById('cust-address').value = '';
+        document.getElementById('cust-landmark').value = '';
+        document.getElementById('order-feedback').classList.add('hidden');
+      }, 3500);
+    } else {
+      showFeedback(data.error || data.message || t.orderFailed, true);
     }
+  } catch (err) {
+    console.error('Order submission failed:', err);
+    showFeedback(t.orderFailed, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = oldTxt;
+  }
+}
 
     // SCRIPT EXECUTION STARTS HERE
     renderRandomTips();
