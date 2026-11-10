@@ -22,8 +22,8 @@
     body { background-color:#fcfcfb; color:#1a1a1a; font-family:'Tajawal',sans-serif; -webkit-font-smoothing:antialiased; scroll-behavior:smooth; }
     .font-heading { font-family:'El Messiri',sans-serif; }
     ::selection { background:#2E7D32; color:#fff; }
-    .product-image-container { background-color:#f4f4f2; border-radius:1.5rem; overflow:hidden; position:relative; display:flex; align-items:center; justify-content:center; }
-    .product-image-container img { mix-blend-mode:multiply; transition:transform .8s cubic-bezier(.25,1,.5,1); width:100%; height:100%; object-fit:contain; padding:1.25rem; }
+    .product-image-container { background-color:#f4f4f2; border-radius:1rem; sm:border-radius:1.5rem; overflow:hidden; position:relative; display:flex; align-items:center; justify-content:center; }
+    .product-image-container img { mix-blend-mode:multiply; transition:transform .8s cubic-bezier(.25,1,.5,1); width:100%; height:100%; object-fit:contain; }
     .product-card:hover .product-image-container img { transform:scale(1.05); }
     .nav-link { position:relative; }
     .nav-link::after { content:''; position:absolute; width:0; height:1px; bottom:-4px; right:0; background-color:#2E7D32; transition:width .3s ease; }
@@ -78,11 +78,11 @@
       </div>
       <div class="flex items-center gap-4">
         <div class="bg-white border border-gray-200 p-1 rounded-full flex items-center text-xs font-bold shadow-sm">
-          <button type="button" onclick="setLanguage('ar')" id="lang-ar" class="px-3 py-1.5 rounded-full transition-all">عربي</button>
-          <button type="button" onclick="setLanguage('ku')" id="lang-ku" class="px-3 py-1.5 rounded-full transition-all">کوردی</button>
-          <button type="button" onclick="setLanguage('en')" id="lang-en" class="px-3 py-1.5 rounded-full transition-all">EN</button>
+          <button type="button" onclick="setLanguage('ar')" id="lang-ar" class="px-3 py-1.5 rounded-full transition-all cursor-pointer">عربي</button>
+          <button type="button" onclick="setLanguage('ku')" id="lang-ku" class="px-3 py-1.5 rounded-full transition-all cursor-pointer">کوردی</button>
+          <button type="button" onclick="setLanguage('en')" id="lang-en" class="px-3 py-1.5 rounded-full transition-all cursor-pointer">EN</button>
         </div>
-        <button type="button" onclick="openCart()" class="relative bg-gray-900 text-white px-5 py-2.5 rounded-full font-bold text-sm flex items-center gap-2 hover:bg-gray-800 transition-colors shadow-md">
+        <button type="button" onclick="openCart()" class="relative bg-gray-900 text-white px-5 py-2.5 rounded-full font-bold text-sm flex items-center gap-2 hover:bg-gray-800 transition-colors shadow-md cursor-pointer">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
           <span id="header-cart-label" class="hidden sm:inline">السلة</span>
           <span id="header-cart-count" class="bg-brand-green text-white font-black text-[10px] px-2 py-0.5 rounded-full min-w-[1.2rem] text-center inline-block">0</span>
@@ -154,7 +154,7 @@
               <span class="text-xs text-gray-500 font-medium" dir="ltr">0778 087 8688</span>
             </div>
           </a>
-          <a href="https://maps.google.com/?q=Alwand+Oil+Press+Khanaqin" target="_blank" class="flex items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:border-brand-green transition-colors group">
+          <a href="https://maps.google.com/?q=34.3468,45.3855" target="_blank" class="flex items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:border-brand-green transition-colors group">
             <div class="w-12 h-12 bg-brand-blue/10 text-brand-blue rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
             </div>
@@ -165,8 +165,8 @@
           </a>
         </div>
       </div>
-      <div class="flex-1 w-full h-80 md:h-[500px] rounded-3xl overflow-hidden shadow-2xl">
-        <iframe src="https://www.google.com/maps?q=Alwand+Oil+Press+Khanaqin&output=embed" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+      <div class="flex-1 w-full h-80 md:h-[500px] rounded-3xl overflow-hidden shadow-2xl border border-gray-200">
+        <iframe src="https://maps.google.com/maps?q=34.3468,45.3855&z=15&output=embed" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
       </div>
     </div>
   </section>
@@ -187,7 +187,7 @@
           <h3 id="cart-modal-title" class="font-heading text-2xl font-bold text-gray-900">سلة المشتريات</h3>
           <span id="cart-modal-count" class="bg-brand-green text-white text-xs font-black px-2.5 py-1 rounded-full min-w-[1.5rem] text-center">0</span>
         </div>
-        <button type="button" onclick="closeCart()" class="p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-900 transition-colors"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+        <button type="button" onclick="closeCart()" class="p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-900 transition-colors cursor-pointer"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
       </div>
       
       <div class="flex-1 overflow-y-auto p-6 space-y-6">
@@ -196,7 +196,7 @@
           <h4 id="checkout-heading" class="font-bold text-gray-900 text-sm">معلومات التوصيل</h4>
           <div>
             <label id="lbl-zone" class="block text-xs font-bold text-gray-500 mb-1.5">منطقة التوصيل</label>
-            <select id="delivery-zone" onchange="changeDeliveryZone(this.value)" class="w-full bg-[#fcfcfb] border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium text-gray-900 focus:outline-none focus:border-brand-green transition">
+            <select id="delivery-zone" onchange="changeDeliveryZone(this.value)" class="w-full bg-[#fcfcfb] border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium text-gray-900 focus:outline-none focus:border-brand-green transition cursor-pointer">
               <option value="khanaqin_inside" id="opt-zone-1">خانقين (داخل المدينة) — 2,000 د.ع</option>
               <option value="khanaqin_villages" id="opt-zone-2">أطراف وقرى خانقين — 3,000 د.ع</option>
               <option value="diyala" id="opt-zone-3">محافظة ديالى — 3,000 د.ع</option>
@@ -223,7 +223,7 @@
           <div class="flex justify-between"><span id="lbl-delivery">كلفة التوصيل:</span><span id="val-delivery" class="text-gray-900">2,000 د.ع</span></div>
           <div class="flex justify-between text-lg font-bold text-gray-900 border-t border-gray-200 pt-3 mt-2"><span id="lbl-total">المجموع الكلي:</span><span id="val-total" class="text-brand-green">0 د.ع</span></div>
         </div>
-        <button type="button" id="btn-submit-order" onclick="submitOrder()" class="w-full bg-gray-900 text-white font-bold py-4 rounded-xl text-sm hover:bg-black transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2">
+        <button type="button" id="btn-submit-order" onclick="submitOrder()" class="w-full bg-gray-900 text-white font-bold py-4 rounded-xl text-sm hover:bg-black transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 cursor-pointer">
           <span id="lbl-submit-btn">تأكيد الطلب</span>
         </button>
       </div>
@@ -240,7 +240,8 @@
       'زيوت مخمرة': { ar:'زيوت مخمرة', ku:'ڕۆنی تەخمیرکراو', en:'Infused Oils' },
       'خلطات علاجية': { ar:'خلطات علاجية', ku:'تێکەڵەی چارەسەری', en:'Therapeutic Blends' },
       'مستحضرات عناية': { ar:'مستحضرات عناية', ku:'بەرهەمی گرنگیدان', en:'Care & Cosmetics' },
-      'مساحيق': { ar:'مساحيق طبيعية', ku:'تۆزی سروشتی', en:'Natural Powders' }
+      'مساحيق': { ar:'مساحيق طبيعية', ku:'تۆزی سروشتی', en:'Natural Powders' },
+      'راشي و زبدات': { ar:'راشي وزبدات', ku:'ڕاشی و کەرە', en:'Tahini & Butters' }
     };
 
     const translations = {
@@ -299,158 +300,73 @@
     let products = [];
     let currentLang = 'ar', currentCategory = 'all', searchQuery = '', selectedVariants = {}, cart = [], selectedDeliveryZone = 'khanaqin_inside';
 
-    function sanitizeTextField(v, fb = '') {
-      if (v === null || v === undefined) return fb;
-      const s = String(v).trim();
-      if (!s || s.startsWith('http')) return fb;
-      return s;
-    }
-
-    function parsePriceNum(v, fb = 0) {
-      if (typeof v === 'number' && !isNaN(v)) return v;
-      if (!v) return fb;
-      const n = Number(String(v).replace(/[^0-9.]/g, ''));
-      return (!isNaN(n) && n > 0) ? n : fb;
-    }
-
-    function parseStockBool(v, fb = false) {
-      if (v === true || v === 1) return true;
-      if (v === false || v === 0) return false;
-      const s = String(v === null || v === undefined ? '' : v).trim().toUpperCase();
-      if (s === 'TRUE' || s === '1' || s === 'YES' || s === 'Y') return true;
-      if (s === 'FALSE' || s === '0' || s === 'NO' || s === 'N') return false;
-      return fb;
-    }
-
-    function normalizeDriveImageUrl(u, fb = '') {
-      let c = String(u === null || u === undefined ? '' : u).trim();
-      if (!c) c = String(fb === null || fb === undefined ? '' : fb).trim();
-      if (!c) return 'https://placehold.co/400x400/f4f4f2/1a1a1a?text=Oil';
-      const fm = c.match(/^=?\s*IMAGE\(\s*"([^"]+)"/i);
-      if (fm) c = fm[1].trim();
-      c = c.replace(/^["']+|["']+$/g, '').trim();
-      if (c.indexOf('//') === 0) c = 'https:' + c;
-      else if (!/^https?:\/\//i.test(c)) c = 'https://' + c.replace(/^\/+/, '');
-      if (/drive\.google\.com|docs\.google\.com/i.test(c)) {
-        const id = c.match(/\/d\/([a-zA-Z0-9_-]{15,})/) || c.match(/[?&]id=([a-zA-Z0-9_-]{15,})/);
-        if (id) return 'https://lh3.googleusercontent.com/d/' + id[1] + '=w600';
-      }
-      try {
-        c = encodeURI(decodeURI(c));
-      } catch (e) {
-        c = c.replace(/ /g, '%20');
-      }
-      c = c.replace(/#/g, '%23');
-      return c;
-    }
-
     function handleImageError(img) {
       img.onerror = null;
-      img.src = 'https://placehold.co/400x400/f4f4f2/1a1a1a?text=Image+Error';
-    }
-
-    function normalizeKey(k) {
-      return String(k).toLowerCase().replace(/[^a-z0-9]/g, '');
-    }
-
-    function buildLookup(item) {
-      const m = {};
-      Object.keys(item).forEach(k => {
-        const n = normalizeKey(k);
-        if (n && !(n in m)) m[n] = item[k];
-      });
-      return m;
-    }
-
-    function pick(m, names) {
-      for (let i = 0; i < names.length; i++) {
-        const v = m[names[i]];
-        if (v !== undefined && v !== null && String(v).trim() !== '') return v;
-      }
-      return '';
+      img.src = 'https://placehold.co/400x400/f4f4f2/1a1a1a?text=Oil';
     }
 
     async function syncProducts() {
       try {
-        let data = await fetch('/api/getProducts', { cache: 'no-store' }).then(r => r.json());
-
+        let res = await fetch('/api/products', { cache: 'no-store' });
+        if (!res.ok) res = await fetch('/api/getProducts', { cache: 'no-store' });
+        
+        let data = await res.json();
         if (typeof data === 'string') {
-          try { data = JSON.parse(data); } catch(e) { console.error('Parse Error', e); }
+          try { data = JSON.parse(data); } catch(e) {}
         }
 
-        if (data && data.error) {
-          console.warn('SHEET ERROR:', data.error);
-          document.getElementById('products-grid').innerHTML = `<div class="col-span-full text-center py-16 text-red-500 font-bold">Error: ${data.error}</div>`;
-          return;
-        }
+        const rawList = data.products || (Array.isArray(data) ? data : []);
 
-        if (Array.isArray(data) && data.length > 0) {
-          const upd = [];
-          const usedIds = new Set();
+        if (rawList && rawList.length > 0) {
+          products = rawList.map((p, idx) => {
+            const vars = Array.isArray(p.variants) && p.variants.length > 0 ? p.variants : [];
+            const v1 = vars[0] || {};
+            const v2 = vars[1] || null;
+            const v3 = vars[2] || null;
 
-          data.forEach((item, idx) => {
-            const m = buildLookup(item);
-            const ar = sanitizeTextField(pick(m, ['namear']), '');
-            if (!ar) return;
+            return {
+              id: p.id || (idx + 1),
+              category: p.category || 'زيوت طبيعية',
+              name_ar: p.name_ar || '',
+              name_ku: p.name_ku || p.name_ar || '',
+              name_en: p.name_en || p.name_ar || '',
+              desc_ar: p.description_ar || p.desc_ar || '',
+              desc_ku: p.description_ku || p.desc_ku || '',
+              desc_en: p.description_en || p.desc_en || '',
+              main_image_url: p.main_image_url || '',
+              size1: v1.size_label || p.size1 || 'قياس موحد',
+              price1: v1.price_iqd ?? p.price1 ?? 0,
+              image1: v1.image_url || p.image1 || p.main_image_url || '',
+              in_stock1: v1.in_stock !== undefined ? Boolean(v1.in_stock) : Boolean(p.in_stock1),
+              variant_id1: v1.variant_id || null,
 
-            let id = parseInt(String(pick(m, ['id', 'itemid'])).trim(), 10);
-            if (isNaN(id) || usedIds.has(id)) id = 1000 + idx;
-            while (usedIds.has(id)) id += 1000;
-            usedIds.add(id);
+              size2: v2 ? v2.size_label : p.size2,
+              price2: v2 ? v2.price_iqd : p.price2,
+              image2: v2 ? (v2.image_url || v1.image_url) : (p.image2 || p.image1),
+              in_stock2: v2 ? Boolean(v2.in_stock) : (p.size2 ? Boolean(p.in_stock2) : false),
+              variant_id2: v2 ? v2.variant_id : null,
 
-            const rawImg = pick(m, ['imageurl1', 'imageurl', 'image', 'img', 'photo']);
-            const img = normalizeDriveImageUrl(rawImg);
+              size3: v3 ? v3.size_label : p.size3,
+              price3: v3 ? v3.price_iqd : p.price3,
+              image3: v3 ? (v3.image_url || v1.image_url) : (p.image3 || p.image1),
+              in_stock3: v3 ? Boolean(v3.in_stock) : (p.size3 ? Boolean(p.in_stock3) : false),
+              variant_id3: v3 ? v3.variant_id : null,
 
-            const s1 = sanitizeTextField(pick(m, ['size1']), null);
-            const s2 = sanitizeTextField(pick(m, ['size2']), null);
-            const s3 = sanitizeTextField(pick(m, ['size3']), null);
-
-            const p1 = s1 ? parsePriceNum(pick(m, ['price1']), 0) : null;
-            const p2 = s2 ? parsePriceNum(pick(m, ['price2']), 0) : null;
-            const p3 = s3 ? parsePriceNum(pick(m, ['price3']), 0) : null;
-
-            const st1 = s1 ? parseStockBool(pick(m, ['instock', 'instock1']), false) : false;
-            const st2 = s2 ? parseStockBool(pick(m, ['instock2']), false) : false;
-            const st3 = s3 ? parseStockBool(pick(m, ['instock3']), false) : false;
-
-            let discountPct = 0;
-            const dRaw = pick(m, ['discount']);
-            if (dRaw !== '') {
-              if (typeof dRaw === 'number' && dRaw > 0 && dRaw < 1) {
-                discountPct = Math.round(dRaw * 100);
-              } else {
-                const match = String(dRaw).match(/(\d+(\.\d+)?)/);
-                if (match) discountPct = Math.min(100, Math.round(parseFloat(match[1])));
-              }
-            }
-
-            upd.push({
-              id: id,
-              category: sanitizeTextField(pick(m, ['category']), 'زيوت طبيعية'),
-              name_ar: ar,
-              name_ku: sanitizeTextField(pick(m, ['nameku']), ar),
-              name_en: sanitizeTextField(pick(m, ['nameen']), ar),
-              desc_ar: sanitizeTextField(pick(m, ['descriptionar']), ''),
-              desc_ku: sanitizeTextField(pick(m, ['descriptionku']), ''),
-              desc_en: sanitizeTextField(pick(m, ['descriptionen']), ''),
-              size1: s1, price1: p1, image1: img, in_stock1: st1,
-              size2: s2, price2: p2, in_stock2: st2,
-              size3: s3, price3: p3, in_stock3: st3,
-              discount_sizes: { 1: discountPct, 2: discountPct, 3: discountPct }
-            });
+              discount_sizes: { 1: 0, 2: 0, 3: 0 }
+            };
           });
 
-          if (upd.length > 0) {
-            products = upd;
-            cart = cart.filter(it => products.some(p => p.id === it.productId));
-            initDefaultVariants(true);
-            renderCategoryFilters();
-            renderProducts(false);
-            renderCart();
-          }
+          cart = cart.filter(it => products.some(p => p.id === it.productId));
+          initDefaultVariants(true);
+          renderCategoryFilters();
+          renderProducts(false);
+          renderCart();
+        } else {
+          document.getElementById('products-grid').innerHTML = `<div class="col-span-full text-center py-16 text-gray-400 font-bold">لا توجد منتجات متوفرة حالياً</div>`;
         }
       } catch (e) {
         console.error('Sync Error:', e);
+        document.getElementById('products-grid').innerHTML = `<div class="col-span-full text-center py-16 text-red-500 font-bold">تعذر تحميل المنتجات</div>`;
       }
     }
 
@@ -462,26 +378,25 @@
           if (p.size1 && p.in_stock1) selectedVariants[p.id] = 1;
           else if (p.size2 && p.in_stock2) selectedVariants[p.id] = 2;
           else if (p.size3 && p.in_stock3) selectedVariants[p.id] = 3;
-          else if (p.size1) selectedVariants[p.id] = 1;
           else selectedVariants[p.id] = 1;
         }
       });
     }
 
     function getVariantDetails(p, num) {
-      let size, price, image, inStock;
+      let size, price, image, inStock, variant_id;
       if (num === 2 && p.size2) {
-        size = p.size2; price = p.price2 || p.price1; image = p.image2 || p.image1; inStock = !!p.in_stock2;
+        size = p.size2; price = p.price2 || p.price1; image = p.image2 || p.image1; inStock = !!p.in_stock2; variant_id = p.variant_id2;
       } else if (num === 3 && p.size3) {
-        size = p.size3; price = p.price3 || p.price1; image = p.image3 || p.image1; inStock = !!p.in_stock3;
+        size = p.size3; price = p.price3 || p.price1; image = p.image3 || p.image1; inStock = !!p.in_stock3; variant_id = p.variant_id3;
       } else {
-        size = p.size1 || 'قياس موحد'; price = p.price1 || 0; image = p.image1; inStock = !!p.in_stock1;
+        size = p.size1 || 'قياس موحد'; price = p.price1 || 0; image = p.image1; inStock = !!p.in_stock1; variant_id = p.variant_id1;
       }
       
       const disc = (p.discount_sizes && p.discount_sizes[num]) || 0;
       const finalPrice = disc > 0 ? Math.round(price * (100 - disc) / 100) : price;
       
-      return { num, size, price: finalPrice, originalPrice: price, discountPercent: disc, image, inStock };
+      return { num, size, price: finalPrice, originalPrice: price, discountPercent: disc, image, inStock, variant_id };
     }
 
     function getCategoryLabel(c) {
@@ -556,7 +471,7 @@
       grid.innerHTML = filtered.map((product, idx) => {
         const activeVar = selectedVariants[product.id] || 1;
         const v = getVariantDetails(product, activeVar);
-        const src = normalizeDriveImageUrl(v.image, v.image);
+        const src = v.image || product.main_image_url || 'https://placehold.co/400x400/f4f4f2/1a1a1a?text=Oil';
         const isOut = !product.in_stock1 && (!product.size2 || !product.in_stock2) && (!product.size3 || !product.in_stock3);
         const oosText = isOut ? t.outOfStockBtn : (formatSizeLabel(v.size) + ' — ' + t.sizeOutBadge);
         const animateStyle = animate ? 'style="animation-delay:' + (Math.min(idx, 8) * 50) + 'ms"' : '';
@@ -571,27 +486,27 @@
           let cls = 'size-pill ';
           if (sel) cls += tier.inStock ? 'size-pill-active' : 'size-pill-oos';
           else cls += tier.inStock ? 'size-pill-inactive' : 'size-pill-oos';
-          const xIcon = !tier.inStock ? '<span class="text-[9px] text-red-500 font-black no-underline">✕</span>' : '';
-          return '<button type="button" id="prod-size-btn-' + product.id + '-' + tier.num + '" onclick="selectVariant(' + product.id + ', ' + tier.num + ')" class="' + cls + ' px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer"><span>' + formatSizeLabel(tier.size) + '</span>' + xIcon + '</button>';
+          const xIcon = !tier.inStock ? '<span class="text-[8px] sm:text-[9px] text-red-500 font-black no-underline">✕</span>' : '';
+          return '<button type="button" id="prod-size-btn-' + product.id + '-' + tier.num + '" onclick="selectVariant(' + product.id + ', ' + tier.num + ')" class="' + cls + ' px-1.5 sm:px-3 py-0.5 sm:py-1.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold flex items-center gap-0.5 sm:gap-1 cursor-pointer"><span>' + formatSizeLabel(tier.size) + '</span>' + xIcon + '</button>';
         }).join('');
         
         return '<article data-product-card-id="' + product.id + '" class="product-card group cursor-pointer ' + (animate ? 'reveal' : '') + '" ' + animateStyle + '>' +
           '<div class="product-image-container aspect-square mb-2 sm:mb-5 relative">' +
             '<img id="prod-img-' + product.id + '" src="' + src + '" alt="' + getProductName(product) + '" loading="lazy" referrerpolicy="no-referrer" onerror="handleImageError(this)" class="w-full h-full object-contain p-1 sm:p-4" />' +
             '<span id="prod-cat-' + product.id + '" class="hidden sm:inline-block absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-bold text-gray-800 border border-gray-100 shadow-sm">' + getCategoryLabel(product.category) + '</span>' +
-            '<div id="prod-oos-' + product.id + '" class="' + (v.inStock ? 'hidden' : 'flex') + ' absolute inset-0 bg-white/60 backdrop-blur-[2px] items-center justify-center"><span class="bg-gray-900 text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg">' + oosText + '</span></div>' +
+            '<div id="prod-oos-' + product.id + '" class="' + (v.inStock ? 'hidden' : 'flex') + ' absolute inset-0 bg-white/60 backdrop-blur-[2px] items-center justify-center p-1"><span class="bg-gray-900 text-white text-[9px] sm:text-xs font-bold px-2 sm:px-4 py-1 sm:py-2 rounded-full shadow-lg text-center">' + oosText + '</span></div>' +
           '</div>' +
-          '<div class="text-center space-y-3">' +
+          '<div class="text-center space-y-1.5 sm:space-y-3">' +
             '<div>' +
-              '<h3 id="prod-title-' + product.id + '" class="font-heading font-bold text-[11px] sm:text-xl text-gray-900 leading-snug">' + getProductName(product) + '</h3>' +
+              '<h3 id="prod-title-' + product.id + '" class="font-heading font-bold text-[11px] sm:text-xl text-gray-900 leading-snug line-clamp-1 sm:line-clamp-none">' + getProductName(product) + '</h3>' +
               '<p id="prod-desc-' + product.id + '" class="hidden sm:block text-sm text-gray-500 mt-1 line-clamp-2">' + getProductDescription(product) + '</p>' +
             '</div>' +
             '<div class="flex flex-wrap justify-center gap-1 sm:gap-1.5">' + pills + '</div>' +
-            '<div class="flex items-center justify-center gap-2" id="prod-price-container-' + product.id + '">' +
-               (v.discountPercent > 0 ? '<span class="text-sm font-bold text-gray-400 line-through">' + formatPrice(v.originalPrice) + '</span>' : '') +
+            '<div class="flex items-center justify-center gap-1 sm:gap-2" id="prod-price-container-' + product.id + '">' +
+               (v.discountPercent > 0 ? '<span class="text-[10px] sm:text-sm font-bold text-gray-400 line-through">' + formatPrice(v.originalPrice) + '</span>' : '') +
                '<span id="prod-price-' + product.id + '" class="text-xs sm:text-lg font-bold ' + (v.discountPercent > 0 ? 'text-red-500' : 'text-gray-900') + '">' + formatPrice(v.price) + '</span>' +
             '</div>' +
-            '<button type="button" id="prod-add-btn-' + product.id + '" onclick="addToCart(' + product.id + ')" ' + (!v.inStock ? 'disabled' : '') + ' class="w-full ' + (v.inStock ? 'bg-gray-900 hover:bg-black text-white' : 'bg-gray-100 text-gray-400 cursor-not-allowed') + ' font-bold py-1.5 sm:py-3.5 px-1 rounded-lg sm:rounded-full text-[10px] sm:text-sm transition-all duration-300 shadow-md active:scale-95 flex items-center justify-center gap-2">' +
+            '<button type="button" id="prod-add-btn-' + product.id + '" onclick="addToCart(' + product.id + ')" ' + (!v.inStock ? 'disabled' : '') + ' class="w-full ' + (v.inStock ? 'bg-gray-900 hover:bg-black text-white' : 'bg-gray-100 text-gray-400 cursor-not-allowed') + ' font-bold py-1.5 sm:py-3.5 px-1 rounded-lg sm:rounded-full text-[10px] sm:text-sm transition-all duration-300 shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer">' +
               '<span id="prod-add-text-' + product.id + '">' + (v.inStock ? t.addToCartBtn : t.outOfStockBtn) + '</span>' +
             '</button>' +
           '</div>' +
@@ -607,21 +522,24 @@
         const btn = document.getElementById('prod-size-btn-' + productId + '-' + num); if (!btn) return;
         const tier = getVariantDetails(product, num), sel = num === activeVar;
         let cls = 'size-pill '; cls += sel ? (tier.inStock ? 'size-pill-active' : 'size-pill-oos') : (tier.inStock ? 'size-pill-inactive' : 'size-pill-oos');
-        btn.className = cls + ' px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer';
-        btn.innerHTML = '<span>' + formatSizeLabel(tier.size) + '</span>' + (!tier.inStock ? '<span class="text-[9px] text-red-500 font-black no-underline">✕</span>' : '');
+        btn.className = cls + ' px-1.5 sm:px-3 py-0.5 sm:py-1.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold flex items-center gap-0.5 sm:gap-1 cursor-pointer';
+        btn.innerHTML = '<span>' + formatSizeLabel(tier.size) + '</span>' + (!tier.inStock ? '<span class="text-[8px] sm:text-[9px] text-red-500 font-black no-underline">✕</span>' : '');
       });
       
       const titleEl = document.getElementById('prod-title-' + productId); if (titleEl) titleEl.textContent = getProductName(product);
       
       const priceWrap = document.getElementById('prod-price-container-' + productId);
       if (priceWrap) {
-        priceWrap.innerHTML = (v.discountPercent > 0 ? '<span class="text-sm font-bold text-gray-400 line-through">' + formatPrice(v.originalPrice) + '</span>' : '') +
+        priceWrap.innerHTML = (v.discountPercent > 0 ? '<span class="text-[10px] sm:text-sm font-bold text-gray-400 line-through">' + formatPrice(v.originalPrice) + '</span>' : '') +
           '<span id="prod-price-' + productId + '" class="text-xs sm:text-lg font-bold ' + (v.discountPercent > 0 ? 'text-red-500' : 'text-gray-900') + '">' + formatPrice(v.price) + '</span>';
       }
 
+      const imgEl = document.getElementById('prod-img-' + productId);
+      if (imgEl && v.image) imgEl.src = v.image;
+
       const oos = document.getElementById('prod-oos-' + productId); if (oos) { oos.classList.toggle('hidden', v.inStock); oos.classList.toggle('flex', !v.inStock); }
       const addBtn = document.getElementById('prod-add-btn-' + productId); const addTxt = document.getElementById('prod-add-text-' + productId);
-      if (addBtn) { addBtn.disabled = !v.inStock; addBtn.className = 'w-full ' + (v.inStock ? 'bg-gray-900 hover:bg-black text-white' : 'bg-gray-100 text-gray-400 cursor-not-allowed') + ' font-bold py-1.5 sm:py-3.5 px-1 rounded-lg sm:rounded-full text-[10px] sm:text-sm transition-all duration-300 shadow-md active:scale-95 flex items-center justify-center gap-2'; }
+      if (addBtn) { addBtn.disabled = !v.inStock; addBtn.className = 'w-full ' + (v.inStock ? 'bg-gray-900 hover:bg-black text-white' : 'bg-gray-100 text-gray-400 cursor-not-allowed') + ' font-bold py-1.5 sm:py-3.5 px-1 rounded-lg sm:rounded-full text-[10px] sm:text-sm transition-all duration-300 shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer'; }
       if (addTxt) addTxt.textContent = v.inStock ? t.addToCartBtn : t.outOfStockBtn;
     }
 
@@ -656,7 +574,7 @@
       } else {
         listEl.innerHTML = cart.map(item => {
           const p = products.find(x => x.id === item.productId); if (!p) return '';
-          const v = getVariantDetails(p, item.variantNum), src = normalizeDriveImageUrl(v.image, v.image);
+          const v = getVariantDetails(p, item.variantNum), src = v.image || p.main_image_url || 'https://placehold.co/400x400/f4f4f2/1a1a1a?text=Oil';
           return '<div class="flex items-center justify-between gap-3 bg-gray-50 p-3 rounded-2xl border border-gray-100">' +
             '<div class="flex items-center gap-3 min-w-0"><img src="' + src + '" referrerpolicy="no-referrer" onerror="handleImageError(this)" class="w-14 h-14 rounded-xl object-contain bg-white p-1.5 border border-gray-100 flex-shrink-0" /><div class="min-w-0"><h5 class="text-xs sm:text-sm font-black text-gray-900 truncate">' + getProductName(p) + '</h5><p class="text-[11px] font-bold text-gray-500">' + formatSizeLabel(v.size) + ' · ' + formatPrice(v.price) + '</p></div></div>' +
             '<div class="flex items-center gap-1.5 bg-white border border-gray-200 rounded-xl px-2 py-1 flex-shrink-0"><button type="button" onclick="updateCartQuantity(\'' + item.cartKey + '\', -1)" class="w-6 h-6 rounded-lg hover:bg-gray-100 font-black text-gray-700 cursor-pointer">−</button><span class="w-5 text-center text-xs font-black text-gray-900">' + item.quantity + '</span><button type="button" onclick="updateCartQuantity(\'' + item.cartKey + '\', 1)" class="w-6 h-6 rounded-lg hover:bg-gray-100 font-black text-gray-700 cursor-pointer">+</button></div>' +
@@ -726,91 +644,89 @@
     }
 
     async function submitOrder() {
-  const t = translations[currentLang];
-  if (cart.length === 0) {
-    showFeedback(t.errEmptyCart, true);
-    return;
-  }
+      const t = translations[currentLang];
+      if (cart.length === 0) {
+        showFeedback(t.errEmptyCart, true);
+        return;
+      }
 
-  const name = document.getElementById('cust-name').value.trim();
-  const phone = document.getElementById('cust-phone').value.trim();
-  const address = document.getElementById('cust-address').value.trim();
-  const landmark = document.getElementById('cust-landmark').value.trim();
+      const name = document.getElementById('cust-name').value.trim();
+      const phone = document.getElementById('cust-phone').value.trim();
+      const address = document.getElementById('cust-address').value.trim();
+      const landmark = document.getElementById('cust-landmark').value.trim();
 
-  if (!name || !phone || !address) {
-    showFeedback(t.errMissingFields, true);
-    return;
-  }
+      if (!name || !phone || !address) {
+        showFeedback(t.errMissingFields, true);
+        return;
+      }
 
-  const subtotal = cart.reduce((s, item) => {
-    const p = products.find(x => x.id === item.productId);
-    if (!p) return s;
-    return s + getVariantDetails(p, item.variantNum).price * item.quantity;
-  }, 0);
+      const subtotal = cart.reduce((s, item) => {
+        const p = products.find(x => x.id === item.productId);
+        if (!p) return s;
+        return s + getVariantDetails(p, item.variantNum).price * item.quantity;
+      }, 0);
 
-  const deliveryFee = DELIVERY_FEES[selectedDeliveryZone] || 2000;
+      const deliveryFee = DELIVERY_FEES[selectedDeliveryZone] || 2000;
 
-  // Format line items for D1 schema
-  const items = cart.map(item => {
-    const p = products.find(x => x.id === item.productId);
-    const v = getVariantDetails(p, item.variantNum);
-    return {
-      variant_id: v.variant_id || null,
-      product_name_ar: p.name_ar,
-      size_label: formatSizeLabel(v.size),
-      unit_price_iqd: v.price,
-      quantity: item.quantity
-    };
-  });
+      const items = cart.map(item => {
+        const p = products.find(x => x.id === item.productId);
+        const v = getVariantDetails(p, item.variantNum);
+        return {
+          variant_id: v.variant_id || null,
+          product_name_ar: p.name_ar,
+          size_label: formatSizeLabel(v.size),
+          unit_price_iqd: v.price,
+          quantity: item.quantity
+        };
+      });
 
-  const btn = document.getElementById('btn-submit-order');
-  btn.disabled = true;
-  const oldTxt = btn.textContent;
-  btn.textContent = '...';
+      const btn = document.getElementById('btn-submit-order');
+      btn.disabled = true;
+      const oldTxt = btn.textContent;
+      btn.textContent = '...';
 
-  try {
-    const res = await fetch('/api/orders', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        channel: 'web',
-        customer_name: name,
-        customer_phone: phone,
-        address: address,
-        landmark: landmark,
-        delivery_fee_iqd: deliveryFee,
-        payment_method: 'cod',
-        items: items
-      })
-    });
+      try {
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            channel: 'web',
+            customer_name: name,
+            customer_phone: phone,
+            address: address,
+            landmark: landmark,
+            delivery_fee_iqd: deliveryFee,
+            payment_method: 'cod',
+            items: items
+          })
+        });
 
-    const data = await res.json();
+        const data = await res.json();
 
-    if (res.ok && data.success) {
-      showFeedback(t.orderSuccess + (data.order_number ? ` (#${data.order_number})` : ''), false);
-      cart = [];
-      renderCart();
-      setTimeout(() => {
-        closeCart();
-        document.getElementById('cust-name').value = '';
-        document.getElementById('cust-phone').value = '';
-        document.getElementById('cust-address').value = '';
-        document.getElementById('cust-landmark').value = '';
-        document.getElementById('order-feedback').classList.add('hidden');
-      }, 3500);
-    } else {
-      showFeedback(data.error || data.message || t.orderFailed, true);
+        if (res.ok && data.success) {
+          showFeedback(t.orderSuccess + (data.order_number ? ` (#${data.order_number})` : ''), false);
+          cart = [];
+          renderCart();
+          setTimeout(() => {
+            closeCart();
+            document.getElementById('cust-name').value = '';
+            document.getElementById('cust-phone').value = '';
+            document.getElementById('cust-address').value = '';
+            document.getElementById('cust-landmark').value = '';
+            document.getElementById('order-feedback').classList.add('hidden');
+          }, 3500);
+        } else {
+          showFeedback(data.error || data.message || t.orderFailed, true);
+        }
+      } catch (err) {
+        console.error('Order submission failed:', err);
+        showFeedback(t.orderFailed, true);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = oldTxt;
+      }
     }
-  } catch (err) {
-    console.error('Order submission failed:', err);
-    showFeedback(t.orderFailed, true);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = oldTxt;
-  }
-}
 
-    // SCRIPT EXECUTION STARTS HERE
     renderRandomTips();
     setLanguage('ar');
     syncProducts();
