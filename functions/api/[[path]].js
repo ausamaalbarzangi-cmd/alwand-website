@@ -48,11 +48,14 @@ export async function onRequest(context) {
           p.description_ku,
           p.description_en,
           p.main_image_url,
+          p.is_bundle,
+          p.bundle_items_json,
           v.id AS variant_id,
           v.size_label,
           v.price_iqd,
           v.cost_iqd,
           v.wholesale_price_iqd,
+          v.discount_percent,
           v.barcode,
           v.in_stock,
           v.stock_quantity,
@@ -69,6 +72,9 @@ export async function onRequest(context) {
 
       for (const row of results) {
         if (!catalogMap.has(row.product_id)) {
+          let bundleItems = [];
+          try { bundleItems = JSON.parse(row.bundle_items_json || "[]"); } catch(e){}
+
           catalogMap.set(row.product_id, {
             id: row.product_id,
             category: row.category,
@@ -79,6 +85,8 @@ export async function onRequest(context) {
             description_ku: row.description_ku,
             description_en: row.description_en,
             main_image_url: row.main_image_url || DEFAULT_PLACEHOLDER,
+            is_bundle: Boolean(row.is_bundle),
+            bundle_items: bundleItems,
             variants: []
           });
         }
@@ -90,6 +98,7 @@ export async function onRequest(context) {
             price_iqd: row.price_iqd,
             cost_iqd: row.cost_iqd || 0,
             wholesale_price_iqd: row.wholesale_price_iqd || row.price_iqd,
+            discount_percent: row.discount_percent || 0,
             barcode: row.barcode || "",
             in_stock: Boolean(row.in_stock),
             stock_quantity: row.stock_quantity,
@@ -138,10 +147,145 @@ export async function onRequest(context) {
         staff: {
           id: staffMember.id,
           name: staffMember.name,
-          role: staffMember.role,
+          role: String(staffMember.role || "cashier").toLowerCase(),
           permissions: perms
         }
       });
+    }
+
+    if (method === "GET" && path === "orders/list") {
+      const url = new URL(request.url);
+      const limit = parseInt(url.searchParams.get("limit") || "50", 10);
+      const search = url.searchParams.get("search") || "";
+
+      let query = `
+        SELECT 
+          o.id, o.order_number, o.channel, o.status, o.created_at,
+          o.subtotal_iqd, o.delivery_fee_iqd, o.discount_iqd, o.total_iqd,
+          o.payment_method, o.customer_name, o.customer_phone, o.address, o.notes,
+          s.name AS cashier_name,
+          json_group_array(
+            json_object(
+              'item_id', oi.id,
+              'variant_id', oi.variant_id,
+              'product_name', oi.product_name_ar,
+              'size', oi.size_label,
+              'unit_price', oi.unit_price_iqd,
+              'quantity', oi.quantity,
+              'line_total', oi.line_total_iqd
+            )
+          ) AS items_json
+        FROM orders o
+        LEFT JOIN staff s ON o.staff_id = s.id
+        LEFT JOIN order_items oi ON o.id = oi.order_id
+      `;
+
+      const binds = [];
+      if (search) {
+        query += ` WHERE o.order_number LIKE ? OR o.customer_phone LIKE ? `;
+        binds.push(`%${search}%`, `%${search}%`);
+      }
+
+      query += ` GROUP BY o.id ORDER BY o.created_at DESC LIMIT ?;`;
+      binds.push(limit);
+
+      const { results } = await db.prepare(query).bind(...binds).all();
+
+      const orders = results.map(row => {
+        let items = [];
+        try { items = JSON.parse(row.items_json || "[]").filter(i => i.item_id !== null); } catch(e){}
+        return {
+          ...row,
+          items: items
+        };
+      });
+
+      return jsonResponse({ orders });
+    }
+
+    if (method === "POST" && path === "orders/return") {
+      const body = await request.json();
+      const { order_id, order_number, return_type, returned_items, customer_phone, customer_name, return_reason } = body;
+
+      if (!order_id && !order_number) {
+        return jsonResponse({ error: "Order ID or Number is required" }, 400);
+      }
+
+      if (!customer_phone) {
+        return jsonResponse({ error: "رقم هاتف الزبون مطلوب لإتمام عملية الإرجاع" }, 400);
+      }
+
+      const order = await db.prepare(
+        "SELECT id, order_number, status, total_iqd FROM orders WHERE id = ? OR order_number = ?"
+      ).bind(order_id || null, order_number || null).first();
+
+      if (!order) {
+        return jsonResponse({ error: "لم يتم العثور على الفاتورة" }, 404);
+      }
+
+      if (order.status === "returned") {
+        return jsonResponse({ error: "تم إرجاع هذه الفاتورة بالكامل مسبقاً" }, 400);
+      }
+
+      const batchStatements = [];
+
+      if (Array.isArray(returned_items) && returned_items.length > 0) {
+        for (const item of returned_items) {
+          if (item.variant_id && item.quantity > 0) {
+            batchStatements.push(
+              db.prepare(
+                "UPDATE product_variants SET stock_quantity = stock_quantity + ? WHERE id = ? AND stock_quantity IS NOT NULL"
+              ).bind(item.quantity, item.variant_id)
+            );
+          }
+        }
+      }
+
+      const returnNotes = `[مرتجع: ${return_reason || 'طلب زبون'} | هاتف: ${customer_phone}${customer_name ? ' | اسم: ' + customer_name : ''}]`;
+      batchStatements.push(
+        db.prepare(`
+          UPDATE orders 
+          SET status = 'returned',
+              notes = CASE WHEN notes IS NULL OR notes = '' THEN ? ELSE notes || ' ' || ? END
+          WHERE id = ?
+        `).bind(returnNotes, returnNotes, order.id)
+      );
+
+      batchStatements.push(
+        db.prepare(`
+          INSERT INTO customers (phone, name, notes, total_spent_iqd, orders_count)
+          VALUES (?, ?, ?, -?, 0)
+          ON CONFLICT(phone) DO UPDATE SET
+            notes = customers.notes || ' ' || excluded.notes,
+            total_spent_iqd = MAX(0, customers.total_spent_iqd - excluded.total_spent_iqd),
+            updated_at = CURRENT_TIMESTAMP
+        `).bind(customer_phone, customer_name || "زبون مرتجع", returnNotes, order.total_iqd)
+      );
+
+      await db.batch(batchStatements);
+
+      return jsonResponse({ success: true, message: "تم تسجيل الإرجاع واستعادة المخزون بنجاح" });
+    }
+
+    if (method === "POST" && path === "orders/edit") {
+      const body = await request.json();
+      const { order_id, payment_method, notes, customer_name, customer_phone, address } = body;
+
+      if (!order_id) {
+        return jsonResponse({ error: "Order ID is required" }, 400);
+      }
+
+      await db.prepare(`
+        UPDATE orders
+        SET payment_method = COALESCE(?, payment_method),
+            notes = COALESCE(?, notes),
+            customer_name = COALESCE(?, customer_name),
+            customer_phone = COALESCE(?, customer_phone),
+            address = COALESCE(?, address)
+        WHERE id = ?
+      `).bind(payment_method || null, notes || null, customer_name || null, customer_phone || null, address || null, order_id).run();
+
+      return jsonResponse({ success: true });
     }
 
     if (method === "GET" && path === "customers") {
@@ -165,7 +309,7 @@ export async function onRequest(context) {
       ).bind(phone).all();
 
       const pastOrders = await db.prepare(`
-        SELECT o.order_number, o.created_at, o.channel, o.total_iqd, 
+        SELECT o.order_number, o.created_at, o.channel, o.status, o.total_iqd, 
                json_group_array(json_object('product_name', oi.product_name_ar, 'size', oi.size_label, 'qty', oi.quantity, 'price', oi.unit_price_iqd)) AS items_json
         FROM orders o
         LEFT JOIN order_items oi ON o.id = oi.order_id
@@ -188,27 +332,27 @@ export async function onRequest(context) {
 
     if (method === "POST" && path === "customers") {
       const body = await request.json();
-      const { phone, name, address, notes } = body;
+      const { phone, name, address, notes, landmark } = body;
 
-      if (!phone || !name) {
-        return jsonResponse({ error: "Phone and Name are required" }, 400);
+      if (!phone) {
+        return jsonResponse({ error: "Phone number is required" }, 400);
       }
 
       await db.prepare(`
         INSERT INTO customers (phone, name, default_address, notes, updated_at)
         VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
         ON CONFLICT(phone) DO UPDATE SET
-          name = excluded.name,
+          name = COALESCE(excluded.name, customers.name),
           default_address = COALESCE(excluded.default_address, customers.default_address),
           notes = excluded.notes,
           updated_at = CURRENT_TIMESTAMP
-      `).bind(phone, name, address || null, notes || "").run();
+      `).bind(phone, name || "زبون", address || null, notes || "").run();
 
       if (address) {
         await db.prepare(`
           INSERT INTO customer_addresses (customer_phone, address, landmark, last_used_at)
           VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-        `).bind(phone, address, body.landmark || "").run();
+        `).bind(phone, address, landmark || "").run();
       }
 
       return jsonResponse({ success: true });
@@ -216,11 +360,11 @@ export async function onRequest(context) {
 
     if (method === "POST" && (path === "orders" || path === "submitOrder")) {
       const body = await request.json();
-      const channel = body.channel || (body.orderId ? "web" : "pos");
+      const channel = body.channel || "pos";
       const items = body.items || [];
 
       if (!items.length) {
-        return jsonResponse({ error: "Order items list is empty" }, 400);
+        return jsonResponse({ error: "سلة المشتريات فارغة" }, 400);
       }
 
       const datePrefix = new Date().toISOString().slice(2, 7).replace("-", "");
@@ -249,7 +393,7 @@ export async function onRequest(context) {
       `).bind(
         orderNumber,
         channel,
-        channel === "pos" ? "completed" : "pending",
+        channel === "web" ? "pending" : "completed",
         body.staff_id || null,
         subtotal,
         deliveryFee,
@@ -339,25 +483,26 @@ export async function onRequest(context) {
 
     if (method === "POST" && path === "manage/product") {
       const body = await request.json();
-      const { id, category, name_ar, name_ku, name_en, description_ar, main_image_url, variants } = body;
+      const { id, category, name_ar, name_ku, name_en, description_ar, main_image_url, is_bundle, bundle_items, variants } = body;
 
       if (!name_ar || !category) {
-        return jsonResponse({ error: "Product name and category are required" }, 400);
+        return jsonResponse({ error: "اسم المنتج والتصنيف مطلوبان" }, 400);
       }
 
       let productId = id;
+      const bundleJson = JSON.stringify(bundle_items || []);
 
       if (productId) {
         await db.prepare(`
           UPDATE products 
-          SET category = ?, name_ar = ?, name_ku = ?, name_en = ?, description_ar = ?, main_image_url = ?
+          SET category = ?, name_ar = ?, name_ku = ?, name_en = ?, description_ar = ?, main_image_url = ?, is_bundle = ?, bundle_items_json = ?
           WHERE id = ?
-        `).bind(category, name_ar, name_ku || null, name_en || null, description_ar || null, main_image_url || null, productId).run();
+        `).bind(category, name_ar, name_ku || null, name_en || null, description_ar || null, main_image_url || null, is_bundle ? 1 : 0, bundleJson, productId).run();
       } else {
         const insertRes = await db.prepare(`
-          INSERT INTO products (category, name_ar, name_ku, name_en, description_ar, main_image_url)
-          VALUES (?, ?, ?, ?, ?, ?)
-        `).bind(category, name_ar, name_ku || null, name_en || null, description_ar || null, main_image_url || null).run();
+          INSERT INTO products (category, name_ar, name_ku, name_en, description_ar, main_image_url, is_bundle, bundle_items_json)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(category, name_ar, name_ku || null, name_en || null, description_ar || null, main_image_url || null, is_bundle ? 1 : 0, bundleJson).run();
         productId = insertRes.meta.last_row_id;
       }
 
@@ -366,7 +511,7 @@ export async function onRequest(context) {
           if (v.variant_id) {
             await db.prepare(`
               UPDATE product_variants
-              SET size_label = ?, price_iqd = ?, cost_iqd = ?, wholesale_price_iqd = ?, 
+              SET size_label = ?, price_iqd = ?, cost_iqd = ?, wholesale_price_iqd = ?, discount_percent = ?,
                   barcode = ?, stock_quantity = ?, in_stock = ?, image_url = ?
               WHERE id = ?
             `).bind(
@@ -374,6 +519,7 @@ export async function onRequest(context) {
               Number(v.price_iqd),
               Number(v.cost_iqd || 0),
               Number(v.wholesale_price_iqd || v.price_iqd),
+              Number(v.discount_percent || 0),
               v.barcode || null,
               v.stock_quantity !== null && v.stock_quantity !== "" ? Number(v.stock_quantity) : null,
               v.in_stock ? 1 : 0,
@@ -383,15 +529,16 @@ export async function onRequest(context) {
           } else if (v.size_label) {
             await db.prepare(`
               INSERT INTO product_variants (
-                product_id, size_label, price_iqd, cost_iqd, wholesale_price_iqd,
+                product_id, size_label, price_iqd, cost_iqd, wholesale_price_iqd, discount_percent,
                 barcode, stock_quantity, in_stock, image_url
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `).bind(
               productId,
               v.size_label,
               Number(v.price_iqd || 0),
               Number(v.cost_iqd || 0),
               Number(v.wholesale_price_iqd || v.price_iqd || 0),
+              Number(v.discount_percent || 0),
               v.barcode || null,
               v.stock_quantity !== null && v.stock_quantity !== "" ? Number(v.stock_quantity) : null,
               v.in_stock ? 1 : 0,
@@ -473,10 +620,14 @@ export async function onRequest(context) {
         "SELECT id, name, role, permissions, is_active FROM staff ORDER BY id ASC"
       ).all();
       return jsonResponse({
-        staff: results.map(s => ({
-          ...s,
-          permissions: JSON.parse(s.permissions || "[]")
-        }))
+        staff: results.map(s => {
+          let perms = [];
+          try { perms = JSON.parse(s.permissions || "[]"); } catch(e){}
+          return {
+            ...s,
+            permissions: perms
+          };
+        })
       });
     }
 
@@ -485,9 +636,10 @@ export async function onRequest(context) {
       const { id, name, pin, role, permissions, is_active } = body;
 
       if (!name) {
-        return jsonResponse({ error: "Staff name is required" }, 400);
+        return jsonResponse({ error: "اسم الموظف مطلوب" }, 400);
       }
 
+      const cleanRole = String(role || "cashier").toLowerCase();
       const permsJson = JSON.stringify(permissions || []);
 
       if (id) {
@@ -495,20 +647,20 @@ export async function onRequest(context) {
           const pinH = await hashPin(pin);
           await db.prepare(
             "UPDATE staff SET name = ?, pin_hash = ?, role = ?, permissions = ?, is_active = ? WHERE id = ?"
-          ).bind(name, pinH, role || "cashier", permsJson, is_active ? 1 : 0, id).run();
+          ).bind(name, pinH, cleanRole, permsJson, is_active !== false ? 1 : 0, id).run();
         } else {
           await db.prepare(
             "UPDATE staff SET name = ?, role = ?, permissions = ?, is_active = ? WHERE id = ?"
-          ).bind(name, role || "cashier", permsJson, is_active ? 1 : 0, id).run();
+          ).bind(name, cleanRole, permsJson, is_active !== false ? 1 : 0, id).run();
         }
       } else {
         if (!pin) {
-          return jsonResponse({ error: "PIN is required for new staff" }, 400);
+          return jsonResponse({ error: "رمز PIN مطلوب للموظف الجديد" }, 400);
         }
         const pinH = await hashPin(pin);
         await db.prepare(
-          "INSERT INTO staff (name, pin_hash, role, permissions, is_active) VALUES (?, ?, ?, ?, ?)"
-        ).bind(name, pinH, role || "cashier", permsJson, 1).run();
+          "INSERT INTO staff (name, pin_hash, role, permissions, is_active) VALUES (?, ?, ?, ?, 1)"
+        ).bind(name, pinH, cleanRole, permsJson).run();
       }
 
       return jsonResponse({ success: true });
