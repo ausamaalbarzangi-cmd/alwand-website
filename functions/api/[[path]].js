@@ -371,7 +371,17 @@ export async function onRequest(context) {
       const body = await request.json();
       // Keep channel as 'pos' to satisfy database constraint, while tagging delivery in notes
 const isDelivery = body.channel === "delivery";
+// Force 'pos' for local register sales to satisfy SQLite constraint
 const channel = body.channel === "web" ? "web" : "pos";
+const orderNotes = isDelivery 
+  ? `[طلب توصيل] ${body.notes || ""}`.trim() 
+  : body.customer_name || null,
+        body.customer_phone || null,
+        null,
+        body.address || null,
+        body.landmark || null,
+        orderNotes
+      ).run();
 const orderNotes = isDelivery ? `[طلب توصيل] ${body.notes || ""}`.trim() : (body.notes || null);
       const items = body.items || [];
 
@@ -580,17 +590,31 @@ orderNotes
       const startDate = url.searchParams.get("start") || "1970-01-01";
       const endDate = url.searchParams.get("end") || "2099-12-31";
 
+      // 1. Aggregate orders directly to avoid join duplication
       const summaryQuery = `
         SELECT 
-          COUNT(o.id) AS total_orders,
-          COALESCE(SUM(o.total_iqd), 0) AS total_sales_iqd,
-          COALESCE(SUM(o.discount_iqd), 0) AS total_discounts_iqd,
+          COUNT(id) AS total_orders,
+          COALESCE(SUM(total_iqd), 0) AS total_sales_iqd,
+          COALESCE(SUM(discount_iqd), 0) AS total_discounts_iqd
+        FROM orders
+        WHERE DATE(created_at) >= DATE(?) AND DATE(created_at) <= DATE(?) AND status = 'completed';
+      `;
+      const summary = await db.prepare(summaryQuery).bind(startDate, endDate).first();
+
+      // 2. Aggregate COGS separately
+      const cogsQuery = `
+        SELECT 
           COALESCE(SUM(oi.quantity * COALESCE(pv.cost_iqd, 0)), 0) AS total_cogs_iqd
-        FROM orders o
-        LEFT JOIN order_items oi ON o.id = oi.order_id
+        FROM order_items oi
+        JOIN orders o ON oi.order_id = o.id
         LEFT JOIN product_variants pv ON oi.variant_id = pv.id
         WHERE DATE(o.created_at) >= DATE(?) AND DATE(o.created_at) <= DATE(?) AND o.status = 'completed';
       `;
+      const cogsRow = await db.prepare(cogsQuery).bind(startDate, endDate).first();
+
+      const sales = Number(summary.total_sales_iqd || 0);
+      const cogs = Number(cogsRow.total_cogs_iqd || 0);
+      const netProfit = sales - cogs;
       const summary = await db.prepare(summaryQuery).bind(startDate, endDate).first();
 
       const sales = Number(summary.total_sales_iqd || 0);
