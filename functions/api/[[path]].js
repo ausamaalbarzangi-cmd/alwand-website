@@ -229,7 +229,7 @@ export async function onRequest(context) {
         return jsonResponse({ error: "لم يتم العثور على الفاتورة" }, 404);
       }
 
-      if (order.status === "returned") {
+      if (order.status === "cancelled") {
         return jsonResponse({ error: "تم إرجاع هذه الفاتورة بالكامل مسبقاً" }, 400);
       }
 
@@ -366,32 +366,25 @@ export async function onRequest(context) {
       return jsonResponse({ success: true });
     }
 
-    // 8. POST /api/orders (Safe transaction handling)
+    // 8. POST /api/orders (Safe transaction handling for In-Store & Delivery)
     if (method === "POST" && (path === "orders" || path === "submitOrder")) {
       const body = await request.json();
-      // Keep channel as 'pos' to satisfy database constraint, while tagging delivery in notes
-const isDelivery = body.channel === "delivery";
-// Force 'pos' for local register sales to satisfy SQLite constraint
-const channel = body.channel === "web" ? "web" : "pos";
-const orderNotes = isDelivery 
-  ? `[طلب توصيل] ${body.notes || ""}`.trim() 
-  : body.customer_name || null,
-        body.customer_phone || null,
-        null,
-        body.address || null,
-        body.landmark || null,
-        orderNotes
-      ).run();
-const orderNotes = isDelivery ? `[طلب توصيل] ${body.notes || ""}`.trim() : (body.notes || null);
       const items = body.items || [];
 
       if (!items.length) {
         return jsonResponse({ error: "سلة المشتريات فارغة" }, 400);
       }
 
+      const isDelivery = body.channel === "delivery";
+      // Database requires channel IN ('pos', 'web')
+      const channel = body.channel === "web" ? "web" : "pos";
+      const orderNotes = isDelivery 
+        ? `[طلب توصيل] ${body.notes || ""}`.trim() 
+        : (body.notes || null);
+
       const datePrefix = new Date().toISOString().slice(2, 7).replace("-", "");
       const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-      const orderNumber = `${channel.toUpperCase()}-${datePrefix}-${randomSuffix}`;
+      const orderNumber = `${(isDelivery ? "DEL" : channel).toUpperCase()}-${datePrefix}-${randomSuffix}`;
 
       let subtotal = 0;
       for (const item of items) {
@@ -405,12 +398,9 @@ const orderNotes = isDelivery ? `[طلب توصيل] ${body.notes || ""}`.trim()
       const cashTendered = body.cash_tendered_iqd !== undefined && body.cash_tendered_iqd !== null ? Number(body.cash_tendered_iqd) : total;
       const changeDue = Math.max(0, cashTendered - total);
 
-      // Insert master record
+      // Insert order
       await db.prepare(`
         INSERT INTO orders (
-        body.address || null,
-body.landmark || null,
-orderNotes
           order_number, channel, status, staff_id,
           subtotal_iqd, delivery_fee_iqd, discount_iqd, total_iqd,
           payment_method, cash_tendered_iqd, change_due_iqd,
@@ -430,13 +420,12 @@ orderNotes
         changeDue,
         body.customer_name || null,
         body.customer_phone || null,
-        body.zone_id || null,
+        null,
         body.address || null,
         body.landmark || null,
-        body.notes || null
+        orderNotes
       ).run();
 
-      // Retrieve confirmed order ID reliably
       const orderRecord = await db.prepare("SELECT id FROM orders WHERE order_number = ?").bind(orderNumber).first();
       const newOrderId = orderRecord.id;
 
@@ -584,13 +573,12 @@ orderNotes
       return jsonResponse({ success: true, product_id: productId });
     }
 
-    // 10. Reports Summary
+    // 10. Reports Summary (Separate queries to avoid Cartesian duplication)
     if (method === "GET" && path === "reports") {
       const url = new URL(request.url);
       const startDate = url.searchParams.get("start") || "1970-01-01";
       const endDate = url.searchParams.get("end") || "2099-12-31";
 
-      // 1. Aggregate orders directly to avoid join duplication
       const summaryQuery = `
         SELECT 
           COUNT(id) AS total_orders,
@@ -601,7 +589,6 @@ orderNotes
       `;
       const summary = await db.prepare(summaryQuery).bind(startDate, endDate).first();
 
-      // 2. Aggregate COGS separately
       const cogsQuery = `
         SELECT 
           COALESCE(SUM(oi.quantity * COALESCE(pv.cost_iqd, 0)), 0) AS total_cogs_iqd
@@ -614,11 +601,6 @@ orderNotes
 
       const sales = Number(summary.total_sales_iqd || 0);
       const cogs = Number(cogsRow.total_cogs_iqd || 0);
-      const netProfit = sales - cogs;
-      const summary = await db.prepare(summaryQuery).bind(startDate, endDate).first();
-
-      const sales = Number(summary.total_sales_iqd || 0);
-      const cogs = Number(summary.total_cogs_iqd || 0);
       const netProfit = sales - cogs;
 
       return jsonResponse({
