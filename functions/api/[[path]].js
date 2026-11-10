@@ -36,6 +36,7 @@ export async function onRequest(context) {
   const method = request.method;
 
   try {
+    // 1. GET /api/products
     if (method === "GET" && (path === "products" || path === "getProducts")) {
       const query = `
         SELECT 
@@ -111,6 +112,7 @@ export async function onRequest(context) {
       return jsonResponse({ products: Array.from(catalogMap.values()) });
     }
 
+    // 2. GET /api/zones
     if (method === "GET" && path === "zones") {
       const { results } = await db.prepare(
         "SELECT id, name_ar, name_ku, name_en, fee_iqd FROM delivery_zones WHERE is_active = 1 ORDER BY fee_iqd ASC"
@@ -118,22 +120,24 @@ export async function onRequest(context) {
       return jsonResponse({ zones: results });
     }
 
+    // 3. POST /api/auth (Username + PIN)
     if (method === "POST" && path === "auth") {
-  const body = await request.json();
-  const { name, pin } = body;
+      const body = await request.json();
+      const name = String(body.name || "").trim();
+      const pin = String(body.pin || "").trim();
 
-  if (!name || !pin) {
-    return jsonResponse({ error: "اسم المستخدم والرمز السري مطلوبان" }, 400);
-  }
+      if (!name || !pin) {
+        return jsonResponse({ error: "اسم المستخدم ورمز PIN مطلوبان" }, 400);
+      }
 
-  const inputHash = await hashPin(pin);
-  const staffMember = await db.prepare(
-    "SELECT id, name, role, permissions FROM staff WHERE LOWER(TRIM(name)) = LOWER(TRIM(?)) AND pin_hash = ? AND is_active = 1"
-  ).bind(name, inputHash).first();
+      const inputHash = await hashPin(pin);
+      const staffMember = await db.prepare(
+        "SELECT id, name, role, permissions FROM staff WHERE LOWER(TRIM(name)) = LOWER(TRIM(?)) AND pin_hash = ? AND is_active = 1"
+      ).bind(name, inputHash).first();
 
-  if (!staffMember) {
-    return jsonResponse({ error: "اسم المستخدم أو الرمز السري غير صحيح" }, 401);
-  }
+      if (!staffMember) {
+        return jsonResponse({ error: "اسم المستخدم أو الرمز السري غير صحيح" }, 401);
+      }
 
       let perms = [];
       try {
@@ -153,6 +157,7 @@ export async function onRequest(context) {
       });
     }
 
+    // 4. GET /api/orders/list
     if (method === "GET" && path === "orders/list") {
       const url = new URL(request.url);
       const limit = parseInt(url.searchParams.get("limit") || "50", 10);
@@ -203,9 +208,10 @@ export async function onRequest(context) {
       return jsonResponse({ orders });
     }
 
+    // 5. POST /api/orders/return
     if (method === "POST" && path === "orders/return") {
       const body = await request.json();
-      const { order_id, order_number, return_type, returned_items, customer_phone, customer_name, return_reason } = body;
+      const { order_id, order_number, returned_items, customer_phone, customer_name, return_reason } = body;
 
       if (!order_id && !order_number) {
         return jsonResponse({ error: "Order ID or Number is required" }, 400);
@@ -233,9 +239,9 @@ export async function onRequest(context) {
         for (const item of returned_items) {
           if (item.variant_id && item.quantity > 0) {
             batchStatements.push(
-             db.prepare(
-  "UPDATE product_variants SET stock_quantity = COALESCE(stock_quantity, 0) + ? WHERE id = ?"
-).bind(item.quantity, item.variant_id)
+              db.prepare(
+                "UPDATE product_variants SET stock_quantity = COALESCE(stock_quantity, 0) + ? WHERE id = ?"
+              ).bind(Number(item.quantity), item.variant_id)
             );
           }
         }
@@ -254,12 +260,12 @@ export async function onRequest(context) {
       batchStatements.push(
         db.prepare(`
           INSERT INTO customers (phone, name, notes, total_spent_iqd, orders_count)
-          VALUES (?, ?, ?, -?, 0)
+          VALUES (?, ?, ?, 0, 0)
           ON CONFLICT(phone) DO UPDATE SET
-            notes = customers.notes || ' ' || excluded.notes,
-            total_spent_iqd = MAX(0, customers.total_spent_iqd - excluded.total_spent_iqd),
+            notes = COALESCE(customers.notes, '') || ' ' || excluded.notes,
+            total_spent_iqd = MAX(0, customers.total_spent_iqd - ?),
             updated_at = CURRENT_TIMESTAMP
-        `).bind(customer_phone, customer_name || "زبون مرتجع", returnNotes, order.total_iqd)
+        `).bind(customer_phone, customer_name || "زبون مرتجع", returnNotes, Number(order.total_iqd || 0))
       );
 
       await db.batch(batchStatements);
@@ -267,6 +273,7 @@ export async function onRequest(context) {
       return jsonResponse({ success: true, message: "تم تسجيل الإرجاع واستعادة المخزون بنجاح" });
     }
 
+    // 6. POST /api/orders/edit
     if (method === "POST" && path === "orders/edit") {
       const body = await request.json();
       const { order_id, payment_method, notes, customer_name, customer_phone, address } = body;
@@ -288,6 +295,7 @@ export async function onRequest(context) {
       return jsonResponse({ success: true });
     }
 
+    // 7. GET & POST /api/customers
     if (method === "GET" && path === "customers") {
       const url = new URL(request.url);
       const phone = url.searchParams.get("phone");
@@ -358,6 +366,7 @@ export async function onRequest(context) {
       return jsonResponse({ success: true });
     }
 
+    // 8. POST /api/orders (Safe transaction handling)
     if (method === "POST" && (path === "orders" || path === "submitOrder")) {
       const body = await request.json();
       const channel = body.channel || "pos";
@@ -373,27 +382,18 @@ export async function onRequest(context) {
 
       let subtotal = 0;
       for (const item of items) {
-        subtotal += Number(item.unit_price_iqd) * Number(item.quantity);
+        subtotal += (Number(item.unit_price_iqd) || 0) * (Number(item.quantity) || 1);
       }
 
-      subtotal,
-deliveryFee,
-discount,
-total,
-body.payment_method || "cash",
-cashTendered !== null ? cashTendered : total,
-changeDue !== null ? changeDue : 0,
-body.customer_name || null,
-body.customer_phone || null,
-body.zone_id || null,
-body.address || null,
-body.landmark || null,
-body.notes || null
+      const deliveryFee = Number(body.delivery_fee_iqd) || 0;
+      const discount = Number(body.discount_iqd) || 0;
+      const total = Math.max(0, subtotal + deliveryFee - discount);
 
-      const cashTendered = body.cash_tendered_iqd !== undefined && body.cash_tendered_iqd !== null ? Number(body.cash_tendered_iqd) : null;
-      const changeDue = cashTendered !== null ? Math.max(0, cashTendered - total) : null;
+      const cashTendered = body.cash_tendered_iqd !== undefined && body.cash_tendered_iqd !== null ? Number(body.cash_tendered_iqd) : total;
+      const changeDue = Math.max(0, cashTendered - total);
 
-      const orderResult = await db.prepare(`
+      // Insert master record
+      await db.prepare(`
         INSERT INTO orders (
           order_number, channel, status, staff_id,
           subtotal_iqd, delivery_fee_iqd, discount_iqd, total_iqd,
@@ -420,10 +420,14 @@ body.notes || null
         body.notes || null
       ).run();
 
-      const newOrderId = orderResult.meta.last_row_id;
+      // Retrieve confirmed order ID reliably
+      const orderRecord = await db.prepare("SELECT id FROM orders WHERE order_number = ?").bind(orderNumber).first();
+      const newOrderId = orderRecord.id;
+
       const batchStatements = [];
 
       for (const item of items) {
+        const lineTotal = (Number(item.unit_price_iqd) || 0) * (Number(item.quantity) || 1);
         batchStatements.push(
           db.prepare(`
             INSERT INTO order_items (
@@ -435,9 +439,9 @@ body.notes || null
             item.variant_id || null,
             item.product_name_ar,
             item.size_label,
-            item.unit_price_iqd,
-            item.quantity,
-            item.unit_price_iqd * item.quantity
+            Number(item.unit_price_iqd) || 0,
+            Number(item.quantity) || 1,
+            lineTotal
           )
         );
 
@@ -445,9 +449,9 @@ body.notes || null
           batchStatements.push(
             db.prepare(`
               UPDATE product_variants 
-              SET stock_quantity = MAX(0, stock_quantity - ?) 
+              SET stock_quantity = MAX(0, COALESCE(stock_quantity, 0) - ?) 
               WHERE id = ? AND stock_quantity IS NOT NULL
-            `).bind(item.quantity, item.variant_id)
+            `).bind(Number(item.quantity) || 1, item.variant_id)
           );
         }
       }
@@ -481,7 +485,9 @@ body.notes || null
         }
       }
 
-      await db.batch(batchStatements);
+      if (batchStatements.length > 0) {
+        await db.batch(batchStatements);
+      }
 
       return jsonResponse({
         success: true,
@@ -491,6 +497,7 @@ body.notes || null
       });
     }
 
+    // 9. Product & Variants Management
     if (method === "POST" && path === "manage/product") {
       const body = await request.json();
       const { id, category, name_ar, name_ku, name_en, description_ar, main_image_url, is_bundle, bundle_items, variants } = body;
@@ -561,6 +568,7 @@ body.notes || null
       return jsonResponse({ success: true, product_id: productId });
     }
 
+    // 10. Reports Summary
     if (method === "GET" && path === "reports") {
       const url = new URL(request.url);
       const startDate = url.searchParams.get("start") || "1970-01-01";
@@ -579,34 +587,6 @@ body.notes || null
       `;
       const summary = await db.prepare(summaryQuery).bind(startDate, endDate).first();
 
-      const channelQuery = `
-        SELECT channel, COUNT(id) AS count, SUM(total_iqd) AS revenue
-        FROM orders
-        WHERE DATE(created_at) >= DATE(?) AND DATE(created_at) <= DATE(?) AND status = 'completed'
-        GROUP BY channel;
-      `;
-      const byChannel = await db.prepare(channelQuery).bind(startDate, endDate).all();
-
-      const staffQuery = `
-        SELECT COALESCE(s.name, 'مبيعات الويب/أخرى') AS staff_name, COUNT(o.id) AS count, SUM(o.total_iqd) AS revenue
-        FROM orders o
-        LEFT JOIN staff s ON o.staff_id = s.id
-        WHERE DATE(o.created_at) >= DATE(?) AND DATE(o.created_at) <= DATE(?) AND o.status = 'completed'
-        GROUP BY o.staff_id;
-      `;
-      const byStaff = await db.prepare(staffQuery).bind(startDate, endDate).all();
-
-      const topProductsQuery = `
-        SELECT oi.product_name_ar, oi.size_label, SUM(oi.quantity) AS total_qty, SUM(oi.line_total_iqd) AS total_revenue
-        FROM order_items oi
-        JOIN orders o ON oi.order_id = o.id
-        WHERE DATE(o.created_at) >= DATE(?) AND DATE(o.created_at) <= DATE(?) AND o.status = 'completed'
-        GROUP BY oi.product_name_ar, oi.size_label
-        ORDER BY total_qty DESC
-        LIMIT 10;
-      `;
-      const topProducts = await db.prepare(topProductsQuery).bind(startDate, endDate).all();
-
       const sales = Number(summary.total_sales_iqd || 0);
       const cogs = Number(summary.total_cogs_iqd || 0);
       const netProfit = sales - cogs;
@@ -618,13 +598,11 @@ body.notes || null
           total_cogs_iqd: cogs,
           net_profit_iqd: netProfit,
           profit_margin_percent: sales > 0 ? ((netProfit / sales) * 100).toFixed(1) : 0
-        },
-        by_channel: byChannel.results || [],
-        by_staff: byStaff.results || [],
-        top_products: topProducts.results || []
+        }
       });
     }
 
+    // 11. Staff Management
     if (method === "GET" && path === "staff") {
       const { results } = await db.prepare(
         "SELECT id, name, role, permissions, is_active FROM staff ORDER BY id ASC"
