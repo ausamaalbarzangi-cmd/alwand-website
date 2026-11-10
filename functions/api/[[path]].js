@@ -251,7 +251,7 @@ export async function onRequest(context) {
       batchStatements.push(
         db.prepare(`
           UPDATE orders 
-          SET status = 'returned',
+          SET status = 'cancelled',
               notes = CASE WHEN notes IS NULL OR notes = '' THEN ? ELSE notes || ' ' || ? END
           WHERE id = ?
         `).bind(returnNotes, returnNotes, order.id)
@@ -369,7 +369,10 @@ export async function onRequest(context) {
     // 8. POST /api/orders (Safe transaction handling)
     if (method === "POST" && (path === "orders" || path === "submitOrder")) {
       const body = await request.json();
-      const channel = body.channel || "pos";
+      // Keep channel as 'pos' to satisfy database constraint, while tagging delivery in notes
+const isDelivery = body.channel === "delivery";
+const channel = body.channel === "web" ? "web" : "pos";
+const orderNotes = isDelivery ? `[طلب توصيل] ${body.notes || ""}`.trim() : (body.notes || null);
       const items = body.items || [];
 
       if (!items.length) {
@@ -395,6 +398,9 @@ export async function onRequest(context) {
       // Insert master record
       await db.prepare(`
         INSERT INTO orders (
+        body.address || null,
+body.landmark || null,
+orderNotes
           order_number, channel, status, staff_id,
           subtotal_iqd, delivery_fee_iqd, discount_iqd, total_iqd,
           payment_method, cash_tendered_iqd, change_due_iqd,
