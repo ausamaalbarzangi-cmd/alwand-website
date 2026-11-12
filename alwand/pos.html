@@ -1699,29 +1699,7 @@ function updateMainImgPreview(url) {
       }
     }
     
-    async function saveProductData() {
-      async function deleteProduct(pid, nameAr) {
-      if (!confirm(`هل أنت متأكد من حذف المنتج "${nameAr}"؟\nسيتم إخفاؤه من المتجر ونقطة البيع مع الحفاظ على سجل الفواتير السابقة.`)) {
-        return;
-      }
-
-      try {
-        const res = await fetch('/api/manage/product/delete', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: pid })
-        });
-        const d = await res.json();
-        if (res.ok && d.success) {
-          await loadCatalog();
-          renderInventoryTable();
-        } else {
-          alert('فشل حذف المنتج: ' + (d.error || d.message || 'خطأ غير معروف'));
-        }
-      } catch (err) {
-        alert('تعذر الاتصال بالخادم');
-      }
-    }
+async function saveProductData() {
       const id = document.getElementById('edit-prod-id').value;
       const category = document.getElementById('edit-prod-category').value.trim();
       const name_ar = document.getElementById('edit-prod-name-ar').value.trim();
@@ -1779,6 +1757,29 @@ function updateMainImgPreview(url) {
       } finally {
         btn.disabled = false;
         btn.textContent = 'حفظ المنتج';
+      }
+    }
+
+    async function deleteProduct(pid, nameAr) {
+      if (!confirm(`هل أنت متأكد من حذف المنتج "${nameAr}"؟\nسيتم إخفاؤه من المتجر ونقطة البيع مع الحفاظ على سجل الفواتير السابقة.`)) {
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/manage/product/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: pid })
+        });
+        const d = await res.json();
+        if (res.ok && d.success) {
+          await loadCatalog();
+          renderInventoryTable();
+        } else {
+          alert('فشل حذف المنتج: ' + (d.error || d.message || 'خطأ غير معروف'));
+        }
+      } catch (err) {
+        alert('تعذر الاتصال بالخادم');
       }
     }
 
