@@ -1335,6 +1335,22 @@ alert('خطأ: ' + errMsg);
         const data = await res.json();
         allTransactionsCache = data.orders || [];
         renderTransactionsUI(allTransactionsCache);
+        async function copyReceiptNumber(orderNo, btnEl) {
+      try {
+        await navigator.clipboard.writeText(orderNo);
+        const orig = btnEl.textContent;
+        btnEl.textContent = '✓ تم النسخ';
+        btnEl.classList.replace('bg-slate-100', 'bg-emerald-100');
+        btnEl.classList.replace('text-slate-700', 'text-emerald-800');
+        setTimeout(() => {
+          btnEl.textContent = orig;
+          btnEl.classList.replace('bg-emerald-100', 'bg-slate-100');
+          btnEl.classList.replace('text-emerald-800', 'text-slate-700');
+        }, 1500);
+      } catch (err) {
+        alert('رقم الفاتورة: ' + orderNo);
+      }
+    }
       } catch (err) {
         console.error(err);
       }
@@ -1377,7 +1393,10 @@ alert('خطأ: ' + errMsg);
           <div class="border rounded-2xl p-4 transition shadow-sm ${cardBg}">
             <div class="flex flex-wrap justify-between items-start gap-2 mb-2 pb-2 border-b border-slate-100">
               <div class="flex items-center gap-2">
-                <span class="font-black text-sm text-slate-900">${o.order_number}</span>
+                <span class="font-black text-sm text-slate-900 select-all" dir="ltr">${o.order_number}</span>
+                <button type="button" onclick="copyReceiptNumber('${o.order_number}', this)" title="نسخ رقم الفاتورة" class="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2 py-0.5 rounded-lg transition cursor-pointer">
+                  نسخ
+                </button>
                 ${tag}
                 <span class="text-xs text-slate-500 font-bold">بواسطة: ${o.cashier_name || 'غير محدد'}</span>
                 <span class="text-xs text-slate-400">(${o.channel.toUpperCase()} · ${o.payment_method})</span>
