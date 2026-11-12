@@ -158,6 +158,73 @@ export async function onRequest(context) {
       });
     }
 
+// 3.5 GET /api/orders/track (Public Storefront Order Lookup)
+    if (method === "GET" && path === "orders/track") {
+      const url = new URL(request.url);
+      const rawQuery = String(url.searchParams.get("q") || "").trim();
+
+      if (rawQuery.length < 4) {
+        return jsonResponse({ error: "يرجى إدخال رقم الطلب أو رقم الهاتف بشكل صحيح" }, 400);
+      }
+
+      const cleanPhone = rawQuery.replace(/[\s\-]/g, "");
+
+      const query = `
+        SELECT 
+          o.id,
+          o.order_number,
+          o.channel,
+          o.status,
+          o.created_at,
+          o.subtotal_iqd,
+          o.delivery_fee_iqd,
+          o.discount_iqd,
+          o.total_iqd,
+          o.customer_name,
+          json_group_array(
+            json_object(
+              'item_id', oi.id,
+              'product_name', oi.product_name_ar,
+              'size', oi.size_label,
+              'unit_price', oi.unit_price_iqd,
+              'quantity', oi.quantity,
+              'line_total', oi.line_total_iqd
+            )
+          ) AS items_json
+        FROM orders o
+        LEFT JOIN order_items oi ON o.id = oi.order_id
+        WHERE UPPER(TRIM(o.order_number)) = UPPER(?)
+           OR REPLACE(REPLACE(TRIM(COALESCE(o.customer_phone, '')), ' ', ''), '-', '') = ?
+        GROUP BY o.id
+        ORDER BY o.created_at DESC
+        LIMIT 5;
+      `;
+
+      const { results } = await db.prepare(query).bind(rawQuery, cleanPhone).all();
+
+      const orders = results.map(row => {
+        let items = [];
+        try {
+          items = JSON.parse(row.items_json || "[]").filter(i => i.item_id !== null);
+        } catch (e) {}
+
+        return {
+          order_number: row.order_number,
+          channel: row.channel,
+          status: row.status,
+          created_at: row.created_at,
+          subtotal_iqd: row.subtotal_iqd,
+          delivery_fee_iqd: row.delivery_fee_iqd,
+          discount_iqd: row.discount_iqd,
+          total_iqd: row.total_iqd,
+          customer_name: row.customer_name || "",
+          items
+        };
+      });
+
+      return jsonResponse({ orders });
+    }
+    
     // 4. GET /api/orders/list
     if (method === "GET" && path === "orders/list") {
       const url = new URL(request.url);
