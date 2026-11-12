@@ -1,4 +1,6 @@
 const DEFAULT_PLACEHOLDER = "https://img.alwandoilpress.com/placeholder.png";
+const DEFAULT_PLACEHOLDER = "https://img.alwandoilpress.com/placeholder.png";
+const R2_PUBLIC_BASE = "https://img.alwandoilpress.com";
 
 async function hashPin(pin) {
   const encoder = new TextEncoder();
@@ -501,7 +503,53 @@ export async function onRequest(context) {
         change_due_iqd: changeDue
       });
     }
+// 8.5 POST /api/manage/upload (Direct R2 Image Upload)
+    if (method === "POST" && path === "manage/upload") {
+      if (!env.IMAGES_BUCKET) {
+        return jsonResponse({ error: "R2 binding 'IMAGES_BUCKET' is not configured." }, 500);
+      }
 
+      const formData = await request.formData();
+      const file = formData.get("file");
+
+      if (!file || typeof file === "string") {
+        return jsonResponse({ error: "لم يتم اختيار ملف صورة" }, 400);
+      }
+
+      const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"];
+      if (!allowedTypes.includes(file.type)) {
+        return jsonResponse({ error: "صيغة الملف غير مدعومة (يرجى رفع JPG, PNG, أو WebP)" }, 400);
+      }
+
+      if (file.size > 10 * 1024 * 1024) {
+        return jsonResponse({ error: "حجم الصورة يتجاوز الحد المسموح (10MB)" }, 400);
+      }
+
+      const extMap = {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/webp": "webp",
+        "image/gif": "gif",
+        "image/avif": "avif"
+      };
+      const ext = extMap[file.type] || "webp";
+      const randomPart = Math.random().toString(36).substring(2, 8);
+      const objectKey = `products/${Date.now()}-${randomPart}.${ext}`;
+
+      await env.IMAGES_BUCKET.put(objectKey, await file.arrayBuffer(), {
+        httpMetadata: {
+          contentType: file.type,
+          cacheControl: "public, max-age=31536000, immutable"
+        }
+      });
+
+      return jsonResponse({
+        success: true,
+        key: objectKey,
+        url: `${R2_PUBLIC_BASE}/${objectKey}`
+      });
+    }
+    
     // 9. Product & Variants Management
     if (method === "POST" && path === "manage/product") {
       const body = await request.json();
