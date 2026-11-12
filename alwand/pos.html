@@ -446,8 +446,15 @@
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-600 mb-1">رابط الصورة الرئيسية للمنتج:</label>
-          <input type="url" id="edit-prod-main-img" placeholder="https://..." dir="ltr" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-600" />
+          <label class="block text-xs font-bold text-slate-600 mb-1">الصورة الرئيسية للمنتج:</label>
+          <div class="flex items-center gap-2">
+            <img id="edit-prod-main-preview" src="https://img.alwandoilpress.com/placeholder.png" class="w-11 h-11 rounded-xl object-contain bg-slate-50 border border-slate-200 flex-shrink-0" />
+            <input type="url" id="edit-prod-main-img" oninput="updateMainImgPreview(this.value)" placeholder="https://... أو ارفع صورة مباشرة" dir="ltr" class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-600" />
+            <label class="bg-slate-900 hover:bg-black text-white text-xs font-bold px-3.5 py-2 rounded-xl cursor-pointer whitespace-nowrap flex items-center gap-1.5 transition">
+              <span>📷 رفع صورة</span>
+              <input type="file" accept="image/*" class="hidden" onchange="handleProductImageUpload(this, 'main')" />
+            </label>
+          </div>
         </div>
 
         <div class="bg-amber-50 border border-amber-200 p-3 rounded-2xl">
@@ -1482,6 +1489,7 @@ alert('خطأ: ' + errMsg);
 
     function openProductModal() {
       document.getElementById('edit-prod-id').value = '';
+      updateMainImgPreview('');
       document.getElementById('product-modal-title').textContent = 'إضافة منتج جديد';
       document.getElementById('edit-prod-category').value = '';
       document.getElementById('edit-prod-name-ar').value = '';
@@ -1510,6 +1518,7 @@ alert('خطأ: ' + errMsg);
       document.getElementById('edit-prod-name-ku').value = p.name_ku || '';
       document.getElementById('edit-prod-name-en').value = p.name_en || '';
       document.getElementById('edit-prod-main-img').value = p.main_image_url;
+      updateMainImgPreview(p.main_image_url);
       document.getElementById('edit-prod-desc-ar').value = p.description_ar || '';
       document.getElementById('edit-prod-is-bundle').checked = !!p.is_bundle;
       document.getElementById('edit-prod-bundle-items').value = (p.bundle_items || []).join(' + ');
@@ -1566,9 +1575,14 @@ alert('خطأ: ' + errMsg);
           </div>
           <div class="col-span-2">
             <label class="block text-[10px] font-bold text-slate-500">صورة هذا الحجم المحددة (اختياري):</label>
-            <input type="url" class="var-img w-full bg-white border border-slate-200 rounded-lg p-1.5 text-xs" dir="ltr" value="${v.specific_image_url || ''}" placeholder="اتركه فارغاً لأخذ الصورة العامة" />
+            <div class="flex items-center gap-1.5">
+              <input type="url" class="var-img flex-1 bg-white border border-slate-200 rounded-lg p-1.5 text-xs" dir="ltr" value="${v.specific_image_url || ''}" placeholder="اتركه فارغاً لأخذ الصورة العامة" />
+              <label class="bg-slate-800 hover:bg-black text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg cursor-pointer whitespace-nowrap">
+                📷 رفع
+                <input type="file" accept="image/*" class="hidden" onchange="handleProductImageUpload(this, 'variant')" />
+              </label>
+            </div>
           </div>
-        </div>
 
         <div class="flex justify-between items-center pt-1 border-t border-slate-200/60">
           <label class="flex items-center gap-1.5 text-xs font-bold cursor-pointer">
@@ -1580,7 +1594,89 @@ alert('خطأ: ' + errMsg);
       `;
       wrap.appendChild(el);
     }
+function updateMainImgPreview(url) {
+      const img = document.getElementById('edit-prod-main-preview');
+      if (img) img.src = (url && url.trim()) ? url.trim() : 'https://img.alwandoilpress.com/placeholder.png';
+    }
 
+    async function optimizeImageFile(file) {
+      if (file.type === 'image/gif') return file;
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const MAX_DIM = 1200;
+            let { width, height } = img;
+            if (width > MAX_DIM || height > MAX_DIM) {
+              if (width > height) {
+                height = Math.round((height * MAX_DIM) / width);
+                width = MAX_DIM;
+              } else {
+                width = Math.round((width * MAX_DIM) / height);
+                height = MAX_DIM;
+              }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            const outType = file.type === 'image/png' ? 'image/png' : 'image/webp';
+            canvas.toBlob((blob) => {
+              if (!blob) return resolve(file);
+              resolve(new File([blob], `upload.${outType === 'image/png' ? 'png' : 'webp'}`, { type: outType }));
+            }, outType, 0.85);
+          };
+          img.onerror = () => resolve(file);
+          img.src = e.target.result;
+        };
+        reader.onerror = () => resolve(file);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function handleProductImageUpload(inputEl, targetType) {
+      const file = inputEl.files && inputEl.files[0];
+      if (!file) return;
+
+      const labelBtn = inputEl.closest('label');
+      const textNode = labelBtn ? labelBtn.querySelector('span') : null;
+      const originalLabel = textNode ? textNode.textContent : '';
+
+      const targetInput = targetType === 'main'
+        ? document.getElementById('edit-prod-main-img')
+        : inputEl.closest('.col-span-2').querySelector('.var-img');
+
+      if (textNode) textNode.textContent = 'جاري الرفع...';
+      if (targetInput) targetInput.disabled = true;
+
+      try {
+        const optimizedFile = await optimizeImageFile(file);
+        const formData = new FormData();
+        formData.append('file', optimizedFile);
+
+        const res = await fetch('/api/manage/upload', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success && data.url) {
+          if (targetInput) targetInput.value = data.url;
+          if (targetType === 'main') updateMainImgPreview(data.url);
+        } else {
+          alert('فشل رفع الصورة: ' + (data.error || 'خطأ غير معروف'));
+        }
+      } catch (err) {
+        alert('تعذر الاتصال بالخادم أثناء رفع الصورة');
+      } finally {
+        if (textNode) textNode.textContent = originalLabel;
+        if (targetInput) targetInput.disabled = false;
+        inputEl.value = '';
+      }
+    }
+    
     async function saveProductData() {
       const id = document.getElementById('edit-prod-id').value;
       const category = document.getElementById('edit-prod-category').value.trim();
