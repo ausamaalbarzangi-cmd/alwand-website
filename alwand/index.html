@@ -82,6 +82,10 @@
           <button type="button" onclick="setLanguage('ku')" id="lang-ku" class="px-3 py-1.5 rounded-full transition-all cursor-pointer">کوردی</button>
           <button type="button" onclick="setLanguage('en')" id="lang-en" class="px-3 py-1.5 rounded-full transition-all cursor-pointer">EN</button>
         </div>
+        <button type="button" onclick="openTrackModal()" class="bg-white border border-gray-200 text-gray-800 px-3.5 sm:px-4 py-2.5 rounded-full font-bold text-xs sm:text-sm flex items-center gap-1.5 hover:border-brand-green hover:text-brand-green transition-colors shadow-sm cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+          <span id="header-track-label">تتبع طلبي</span>
+        </button>
         <button type="button" onclick="openCart()" class="relative bg-gray-900 text-white px-5 py-2.5 rounded-full font-bold text-sm flex items-center gap-2 hover:bg-gray-800 transition-colors shadow-md cursor-pointer">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
           <span id="header-cart-label" class="hidden sm:inline">السلة</span>
@@ -232,6 +236,35 @@
 
   <div id="toast-container"></div>
 
+  <div id="track-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onclick="if(event.target===this)closeTrackModal()">
+    <div class="bg-white rounded-3xl w-full max-w-lg max-h-[88vh] flex flex-col shadow-2xl overflow-hidden border border-gray-100">
+      <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+        <div>
+          <h3 id="track-modal-title" class="font-heading text-2xl font-bold text-gray-900">تتبع حالة الطلب</h3>
+          <p id="track-modal-subtitle" class="text-xs text-gray-500 mt-0.5">أدخل رقم الطلب أو رقم الهاتف المستخدم عند الشراء</p>
+        </div>
+        <button type="button" onclick="closeTrackModal()" class="p-2 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-900 transition-colors cursor-pointer">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="p-6 border-b border-gray-100 bg-[#fcfcfb]">
+        <form onsubmit="event.preventDefault(); searchTrackedOrder();" class="flex gap-2">
+          <input type="text" id="track-query-input" dir="ltr" placeholder="WEB-2611-1234 / 077..." class="flex-1 bg-white border border-gray-200 rounded-2xl px-4 py-3 text-sm font-bold text-gray-900 focus:outline-none focus:border-brand-green transition text-start" />
+          <button type="submit" id="btn-track-search" class="bg-gray-900 hover:bg-black text-white font-bold px-6 py-3 rounded-2xl text-sm transition cursor-pointer whitespace-nowrap">
+            بحث
+          </button>
+        </form>
+      </div>
+
+      <div id="track-results-container" class="flex-1 overflow-y-auto p-6 space-y-4">
+        <div class="text-center py-10 text-gray-400 text-xs font-bold" id="track-empty-hint">
+          اكتب رقم الطلب (مثل WEB-2611-1234) أو رقم هاتفك لعرض التفاصيل
+        </div>
+      </div>
+    </div>
+  </div>
+  
   <script>
     const DELIVERY_FEES = { khanaqin_inside: 2000, khanaqin_villages: 3000, diyala: 3000, iraq: 5000 };
 
@@ -258,6 +291,12 @@
         tipsTitle: 'أسرار الزيوت', tipsSubtitle: 'تعرف على فوائد وطرق استخدام زيوتنا الطبيعية في روتينك اليومي.',
         aboutTitle: 'قصتنا', aboutDesc1: 'بدأت معصرة الوند من قلب خانقين برؤية بسيطة: العودة إلى الطبيعة. نؤمن بأن البشرة والشعر يستحقان فقط ما تقدمه الأرض، دون إضافات كيميائية أو مواد حافظة.', aboutDesc2: 'نستخدم تقنية العصر على البارد لضمان الحفاظ على الفيتامينات والمعادن والخصائص العلاجية الكاملة لكل قطرة زيت.',
         contactTitle: 'تواصل معنا', contactDesc: 'نحن هنا للإجابة على أسئلتك. تواصل معنا مباشرة عبر واتساب أو قم بزيارة معصرتنا في خانقين.'
+        headerTrackLabel: 'تتبع طلبي', trackTitle: 'تتبع حالة الطلب', trackSubtitle: 'أدخل رقم الطلب أو رقم الهاتف المستخدم عند الشراء',
+        trackPlaceholder: 'رقم الطلب أو الهاتف (07...)', trackSearchBtn: 'بحث',
+        trackEmptyHint: 'اكتب رقم الطلب (مثل WEB-2611-1234) أو رقم هاتفك لعرض التفاصيل',
+        trackNotFound: 'لم يتم العثور على طلبات مطابقة. تأكد من رقم الطلب أو رقم الهاتف.',
+        statusPending: 'قيد التجهيز والمراجعة', statusCompleted: 'مكتمل / تم التجهيز', statusCancelled: 'ملغي / مرتجع',
+        trackOrderNo: 'رقم الطلب:', trackItemsLabel: 'المنتجات:', trackTotalLabel: 'المجموع الكلي:', trackBtnShortcut: 'تتبع الطلب الآن'
       },
       ku: {
         dir:'rtl', topAnnouncement:'ڕۆنی سروشتی ١٠٠٪ بە ساردی گوشراو | گەیاندنی خێرا بۆ هەموو عێراق', brandTitle:'معصرة الوند', brandSubtitle:'بۆ ڕۆنی سروشتی و گرنگیدانی تەواو', navShop:'فرۆشگا', navTips:'نهێنییەکانی ڕۆن', navAbout:'چیرۆکمان', navContact:'پەیوەندی',
@@ -272,6 +311,12 @@
         tipsTitle: 'نهێنییەکانی ڕۆن', tipsSubtitle: 'سود و شێوازی بەکارهێنانی ڕۆنەکان بناسە.',
         aboutTitle: 'چیرۆکمان', aboutDesc1: 'لە دڵی خانەقینەوە دەستی پێکرد.', aboutDesc2: 'ڕۆنی سروشتی بە ساردی گوشراو بۆ پاراستنی تەواوی خاسیەتەکانی.',
         contactTitle: 'پەیوەندیمان پێوە بکە', contactDesc: 'بۆ هەر پرسیارێک لە ڕێگەی واتساپ پەیوەندیمان پێوە بکە.'
+        headerTrackLabel: 'بەدواداچوونی داواکاری', trackTitle: 'بەدواداچوونی داواکاری', trackSubtitle: 'ژمارەی داواکاری یان ژمارەی مۆبایل بنووسە',
+        trackPlaceholder: 'ژمارەی داواکاری یان مۆبایل', trackSearchBtn: 'گەڕان',
+        trackEmptyHint: 'ژمارەی داواکاری یان ژمارەی مۆبایلەکەت بنووسە بۆ بینینی وردەکاری',
+        trackNotFound: 'هیچ داواکارییەک نەدۆزرایەوە.',
+        statusPending: 'لەژێر ئامادەکردندایە', statusCompleted: 'تەواوبووە', statusCancelled: 'هەڵوەشاوەتەوە',
+        trackOrderNo: 'ژمارەی داواکاری:', trackItemsLabel: 'بەرهەمەکان:', trackTotalLabel: 'کۆی گشتی:', trackBtnShortcut: 'بەدواداچوونی داواکاری'
       },
       en: {
         dir:'ltr', topAnnouncement:'100% Pure Cold-Pressed Oils | Fast Delivery All Over Iraq', brandTitle:'Alwand Oil Press', brandSubtitle:'100% Pure Cold-Pressed Oils', navShop:'Shop', navTips:'Oil Secrets', navAbout:'Our Story', navContact:'Contact Us',
@@ -286,6 +331,12 @@
         tipsTitle: 'Oil Secrets', tipsSubtitle: 'Discover the benefits and usages of our natural oils.',
         aboutTitle: 'Our Story', aboutDesc1: 'Alwand started in the heart of Khanaqin with a simple vision: returning to nature.', aboutDesc2: 'We use cold-press technology to preserve all vitamins and therapeutic properties.',
         contactTitle: 'Contact Us', contactDesc: 'We are here to answer your questions. Reach out via WhatsApp.'
+        headerTrackLabel: 'Track Order', trackTitle: 'Track Your Order', trackSubtitle: 'Enter your order code or the phone number used at checkout',
+        trackPlaceholder: 'Order code or phone (07...)', trackSearchBtn: 'Search',
+        trackEmptyHint: 'Enter your order code (e.g., WEB-2611-1234) or phone number to view status',
+        trackNotFound: 'No matching orders found. Please verify your order code or phone number.',
+        statusPending: 'Preparing / Pending', statusCompleted: 'Completed', statusCancelled: 'Cancelled / Returned',
+        trackOrderNo: 'Order #:', trackItemsLabel: 'Items:', trackTotalLabel: 'Total:', trackBtnShortcut: 'Track Order Now'
       }
     };
 
@@ -596,6 +647,110 @@
       c.appendChild(el); setTimeout(() => el.remove(), 2400);
     }
 
+function openTrackModal(prefillCode = '') {
+      const modal = document.getElementById('track-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      document.body.style.overflow = 'hidden';
+
+      const input = document.getElementById('track-query-input');
+      const savedOrder = prefillCode || localStorage.getItem('alwand_last_order') || '';
+      if (savedOrder && !input.value.trim()) {
+        input.value = savedOrder;
+        searchTrackedOrder();
+      }
+    }
+
+    function closeTrackModal() {
+      const modal = document.getElementById('track-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      document.body.style.overflow = '';
+    }
+
+    async function searchTrackedOrder() {
+      const t = translations[currentLang];
+      const q = document.getElementById('track-query-input').value.trim();
+      const container = document.getElementById('track-results-container');
+      const btn = document.getElementById('btn-track-search');
+
+      if (q.length < 4) return;
+
+      btn.disabled = true;
+      const oldLabel = btn.textContent;
+      btn.textContent = '...';
+
+      try {
+        const res = await fetch(`/api/orders/track?q=${encodeURIComponent(q)}`, { cache: 'no-store' });
+        const data = await res.json();
+        const orders = data.orders || [];
+
+        if (!orders.length) {
+          container.innerHTML = `<div class="text-center py-10 bg-gray-50 rounded-2xl border border-gray-100 p-4 text-xs font-bold text-gray-500">${t.trackNotFound}</div>`;
+          return;
+        }
+
+        container.innerHTML = orders.map(o => {
+          let badgeClass = 'bg-amber-100 text-amber-800 border-amber-200';
+          let statusLabel = t.statusPending;
+          let dotClass = 'bg-amber-500 animate-pulse';
+
+          if (o.status === 'completed') {
+            badgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-200';
+            statusLabel = t.statusCompleted;
+            dotClass = 'bg-emerald-600';
+          } else if (o.status === 'cancelled') {
+            badgeClass = 'bg-rose-100 text-rose-800 border-rose-200';
+            statusLabel = t.statusCancelled;
+            dotClass = 'bg-rose-600';
+          }
+
+          const dateStr = o.created_at ? new Date(o.created_at).toLocaleDateString(currentLang === 'en' ? 'en-US' : 'ar-IQ', {
+            year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+          }) : '';
+
+          const itemsHtml = (o.items || []).map(it => `
+            <div class="flex justify-between items-center text-xs py-1.5 border-b border-gray-100 last:border-0">
+              <span class="font-bold text-gray-800">${it.quantity}× ${it.product_name} <span class="text-gray-400">(${formatSizeLabel(it.size)})</span></span>
+              <span class="font-bold text-gray-600">${formatPrice(it.line_total)}</span>
+            </div>
+          `).join('');
+
+          return `
+            <div class="bg-[#fcfcfb] border border-gray-200 rounded-2xl p-4 space-y-3 shadow-sm">
+              <div class="flex flex-wrap justify-between items-center gap-2 pb-2 border-b border-gray-100">
+                <div>
+                  <span class="text-[11px] font-bold text-gray-400 block">${t.trackOrderNo}</span>
+                  <span class="font-mono font-black text-sm text-gray-900" dir="ltr">${o.order_number}</span>
+                </div>
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${badgeClass}">
+                  <span class="w-2 h-2 rounded-full ${dotClass}"></span>
+                  ${statusLabel}
+                </span>
+              </div>
+
+              ${dateStr ? `<div class="text-[11px] font-medium text-gray-400">${dateStr}</div>` : ''}
+
+              <div>
+                <span class="text-[11px] font-bold text-gray-500 block mb-1">${t.trackItemsLabel}</span>
+                <div class="bg-white rounded-xl px-3 py-1 border border-gray-100">${itemsHtml}</div>
+              </div>
+
+              <div class="flex justify-between items-center pt-1 text-sm font-black text-gray-900">
+                <span>${t.trackTotalLabel}</span>
+                <span class="text-brand-green">${formatPrice(o.total_iqd)}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        container.innerHTML = `<div class="text-center py-8 text-xs font-bold text-red-500">${t.orderFailed}</div>`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = oldLabel;
+      }
+    }
+    
     function renderRandomTips() {
       const grid = document.getElementById('tips-grid'); if (!grid) return;
       const selected = [...OIL_TIPS].sort(() => 0.5 - Math.random()).slice(0, 3);
@@ -626,6 +781,13 @@
       sT('tips-title', t.tipsTitle); sT('tips-subtitle', t.tipsSubtitle); sT('catalog-heading', t.catalogHeading); sT('catalog-subheading', t.catalogSubheading);
       document.getElementById('searchInput').placeholder = t.searchPlaceholder;
       sT('about-title', t.aboutTitle); sT('about-desc-1', t.aboutDesc1); sT('about-desc-2', t.aboutDesc2); sT('contact-title', t.contactTitle); sT('contact-desc', t.contactDesc);
+      sT('header-track-label', t.headerTrackLabel);
+      sT('track-modal-title', t.trackTitle);
+      sT('track-modal-subtitle', t.trackSubtitle);
+      const trackInp = document.getElementById('track-query-input');
+      if (trackInp) trackInp.placeholder = t.trackPlaceholder;
+      sT('btn-track-search', t.trackSearchBtn);
+      sT('track-empty-hint', t.trackEmptyHint);
       sT('cart-modal-title', t.cartTitle); sT('checkout-heading', t.checkoutHeading); sT('lbl-zone', t.lblZone);
       sT('opt-zone-1', t.zone1); sT('opt-zone-2', t.zone2); sT('opt-zone-3', t.zone3); sT('opt-zone-4', t.zone4);
       document.getElementById('cust-name').placeholder = t.namePlaceholder; document.getElementById('cust-phone').placeholder = t.phonePlaceholder; document.getElementById('cust-address').placeholder = t.addressPlaceholder; document.getElementById('cust-landmark').placeholder = t.landmarkPlaceholder;
@@ -704,6 +866,9 @@
         const data = await res.json();
 
         if (res.ok && data.success) {
+          if (data.order_number) {
+            localStorage.setItem('alwand_last_order', data.order_number);
+          }
           showFeedback(t.orderSuccess + (data.order_number ? ` (#${data.order_number})` : ''), false);
           cart = [];
           renderCart();
