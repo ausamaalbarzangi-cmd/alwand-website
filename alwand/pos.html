@@ -70,7 +70,10 @@
       <nav class="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl text-xs font-bold">
         <button onclick="switchTab('pos')" id="tab-btn-pos" class="px-3.5 py-1.5 rounded-xl transition bg-white text-slate-900 shadow-sm">الكاشير</button>
         <button onclick="switchTab('returns')" id="tab-btn-returns" class="px-3.5 py-1.5 rounded-xl transition text-slate-600 hover:text-slate-900">المرتجع</button>
-        <button onclick="switchTab('products')" id="tab-btn-products" class="px-3.5 py-1.5 rounded-xl transition text-slate-600 hover:text-slate-900">المنتجات والمخزن</button>
+        <button onclick="switchTab('products')" id="tab-btn-products" class="px-3.5 py-1.5 rounded-xl transition text-slate-600 hover:text-slate-900 inline-flex items-center gap-1.5">
+          <span>المنتجات والمخزن</span>
+          <span id="nav-low-stock-badge" class="hidden bg-amber-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full leading-none">0</span>
+        </button>
         <button onclick="switchTab('customers')" id="tab-btn-customers" class="px-3.5 py-1.5 rounded-xl transition text-slate-600 hover:text-slate-900">الزبائن</button>
         <button onclick="switchTab('reports')" id="tab-btn-reports" class="px-3.5 py-1.5 rounded-xl transition text-slate-600 hover:text-slate-900">المبيعات والأرباح</button>
         <button onclick="switchTab('staff')" id="tab-btn-staff" class="px-3.5 py-1.5 rounded-xl transition text-slate-600 hover:text-slate-900">الموظفين</button>
@@ -261,15 +264,28 @@
 
   <!-- ==================== VIEW 3: PRODUCT & STOCK MANAGEMENT ==================== -->
   <main id="view-products" class="flex-1 flex flex-col p-6 overflow-hidden hidden bg-white">
-    <div class="flex justify-between items-center mb-6">
+    <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
       <div>
         <h2 class="font-heading text-2xl font-bold text-slate-900">إدارة المنتجات والمخزون</h2>
         <p class="text-xs text-slate-500">إضافة منتجات، عروض التخفيض، البكجات، وصور الأحجام</p>
       </div>
-      <button onclick="openProductModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-        إضافة منتج جديد
-      </button>
+
+      <div class="flex flex-wrap items-center gap-2.5">
+        <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-600">
+          <span>حد التنبيه:</span>
+          <input type="number" id="low-stock-threshold-input" min="1" max="500" value="5" onchange="updateLowStockThreshold(this.value)" class="w-14 text-center bg-white border border-slate-200 rounded-lg py-0.5 font-black text-slate-900 focus:outline-none focus:border-amber-500" />
+        </div>
+
+        <button type="button" id="btn-filter-low-stock" onclick="toggleLowStockFilter()" class="bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 font-bold text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-1.5 transition">
+          <span>⚠️ النواقص فقط</span>
+          <span id="inv-low-stock-count" class="bg-amber-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full">0</span>
+        </button>
+
+        <button onclick="openProductModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          إضافة منتج جديد
+        </button>
+      </div>
     </div>
 
     <div class="flex-1 overflow-y-auto border border-slate-200 rounded-2xl">
@@ -680,6 +696,61 @@
     let activeReturnOrder = null;
     let allTransactionsCache = [];
 
+let lowStockThreshold = Number(localStorage.getItem('alwand_low_stock_threshold')) || 5;
+    let showLowStockOnly = false;
+
+    function isVariantOutOfStock(v) {
+      return !v.in_stock || (v.stock_quantity !== null && v.stock_quantity !== undefined && Number(v.stock_quantity) <= 0);
+    }
+
+    function isVariantLowStock(v) {
+      if (isVariantOutOfStock(v)) return false;
+      if (v.stock_quantity === null || v.stock_quantity === undefined) return false;
+      return Number(v.stock_quantity) <= lowStockThreshold;
+    }
+
+    function updateLowStockIndicators() {
+      const threshInput = document.getElementById('low-stock-threshold-input');
+      if (threshInput) threshInput.value = lowStockThreshold;
+
+      let alertCount = 0;
+      for (const p of catalog) {
+        for (const v of (p.variants || [])) {
+          if (isVariantLowStock(v) || isVariantOutOfStock(v)) {
+            alertCount++;
+          }
+        }
+      }
+
+      const navBadge = document.getElementById('nav-low-stock-badge');
+      if (navBadge) {
+        navBadge.textContent = alertCount;
+        navBadge.classList.toggle('hidden', alertCount === 0);
+      }
+
+      const invBadge = document.getElementById('inv-low-stock-count');
+      if (invBadge) invBadge.textContent = alertCount;
+    }
+
+    function updateLowStockThreshold(val) {
+      lowStockThreshold = Math.max(1, Number(val) || 5);
+      localStorage.setItem('alwand_low_stock_threshold', String(lowStockThreshold));
+      updateLowStockIndicators();
+      renderPosGrid();
+      renderInventoryTable();
+    }
+
+    function toggleLowStockFilter() {
+      showLowStockOnly = !showLowStockOnly;
+      const btn = document.getElementById('btn-filter-low-stock');
+      if (btn) {
+        btn.className = showLowStockOnly
+          ? 'bg-amber-600 text-white border border-amber-600 font-bold text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-1.5 transition shadow-sm'
+          : 'bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 font-bold text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-1.5 transition';
+      }
+      renderInventoryTable();
+    }
+    
     // --- 1. PIN & User Auth ---
     function pressPin(d) {
       if (pinBuffer.length < 4) {
@@ -828,6 +899,7 @@
         renderCategoryTabs();
         renderPosGrid();
         populateCategoryDatalist();
+        updateLowStockIndicators();
       } catch (err) {
         console.error('Catalog load failure:', err);
       }
@@ -892,13 +964,19 @@
         const imgSrc = firstVariant.image_url || p.main_image_url || 'https://placehold.co/400x400/f4f4f2/1a1a1a?text=Oil';
 
         const sizeButtons = variants.map(v => {
-          const oos = !v.in_stock || (v.stock_quantity !== null && v.stock_quantity <= 0);
+          const oos = isVariantOutOfStock(v);
+          const low = isVariantLowStock(v);
           const hasDisc = v.discount_percent > 0;
           const finalPrice = hasDisc ? Math.round(v.price_iqd * (100 - v.discount_percent) / 100) : v.price_iqd;
 
-          return `<button type="button" onclick="addToPosCart(${p.id}, ${v.variant_id})" ${oos ? 'disabled' : ''} class="px-2 py-1 ${oos ? 'bg-slate-100 text-slate-400 line-through cursor-not-allowed' : 'bg-slate-100 hover:bg-emerald-600 hover:text-white text-slate-700'} rounded-lg text-[10px] font-bold transition flex items-center gap-1">
+          let btnStyle = 'bg-slate-100 hover:bg-emerald-600 hover:text-white text-slate-700';
+          if (oos) btnStyle = 'bg-slate-100 text-slate-400 line-through cursor-not-allowed';
+          else if (low) btnStyle = 'bg-amber-50 border border-amber-300 hover:bg-amber-600 hover:text-white text-amber-900';
+
+          return `<button type="button" onclick="addToPosCart(${p.id}, ${v.variant_id})" ${oos ? 'disabled' : ''} class="px-2 py-1 ${btnStyle} rounded-lg text-[10px] font-bold transition flex items-center gap-1">
             <span>${v.size_label} — ${(finalPrice).toLocaleString()}</span>
             ${hasDisc ? `<span class="bg-red-500 text-white text-[8px] px-1 rounded font-black">-%${v.discount_percent}</span>` : ''}
+            ${low ? `<span class="bg-amber-500 text-white text-[8px] px-1 rounded font-black">باقي ${v.stock_quantity}</span>` : ''}
           </button>`;
         }).join('');
 
@@ -1466,13 +1544,40 @@ alert('خطأ: ' + errMsg);
     // --- 9. Product & Bundle Editor ---
     function renderInventoryTable() {
       const tbody = document.getElementById('inventory-table-body');
-      tbody.innerHTML = catalog.map(p => {
+      const itemsToRender = showLowStockOnly
+        ? catalog.filter(p => (p.variants || []).some(v => isVariantLowStock(v) || isVariantOutOfStock(v)))
+        : catalog;
+
+      if (!itemsToRender.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400 font-bold text-xs">${showLowStockOnly ? 'جميع المنتجات متوفرة بكميات جيدة حالياً ✓' : 'لا توجد منتجات'}</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = itemsToRender.map(p => {
         const variants = p.variants || [];
-        const sizesSummary = variants.map(v => `
-          <span class="inline-block bg-slate-100 text-[10px] font-bold px-2 py-0.5 rounded-md ml-1 mb-1 ${!v.in_stock?'line-through text-slate-400':''}">
-            ${v.size_label} (سعر: ${(v.price_iqd).toLocaleString()} | كلفة: ${(v.cost_iqd||0).toLocaleString()} ${v.discount_percent>0 ? `| خصم %${v.discount_percent}` : ''})
-          </span>
-        `).join('');
+        const sizesSummary = variants.map(v => {
+          const oos = isVariantOutOfStock(v);
+          const low = isVariantLowStock(v);
+          const qtyLabel = (v.stock_quantity !== null && v.stock_quantity !== undefined)
+            ? ` | مخزن: ${v.stock_quantity}`
+            : '';
+
+          let pillClass = 'bg-slate-100 text-slate-800';
+          let statusTag = '';
+          if (oos) {
+            pillClass = 'bg-rose-50 border border-rose-200 text-rose-700';
+            statusTag = ' <span class="bg-rose-600 text-white text-[9px] px-1.5 py-0.2 rounded font-black">نفذت الكمية</span>';
+          } else if (low) {
+            pillClass = 'bg-amber-50 border border-amber-300 text-amber-900';
+            statusTag = ' <span class="bg-amber-500 text-white text-[9px] px-1.5 py-0.2 rounded font-black">منخفض</span>';
+          }
+
+          return `
+            <span class="inline-block ${pillClass} text-[10px] font-bold px-2 py-0.5 rounded-md ml-1 mb-1">
+              ${v.size_label} (سعر: ${(v.price_iqd).toLocaleString()} | كلفة: ${(v.cost_iqd||0).toLocaleString()}${qtyLabel}${v.discount_percent>0 ? ` | خصم %${v.discount_percent}` : ''})${statusTag}
+            </span>
+          `;
+        }).join('');
 
         const totalQty = variants.reduce((s, v) => s + (v.stock_quantity !== null ? Number(v.stock_quantity) : 0), 0);
 
