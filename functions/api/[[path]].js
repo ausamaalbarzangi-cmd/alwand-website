@@ -1,5 +1,4 @@
 const DEFAULT_PLACEHOLDER = "https://img.alwandoilpress.com/placeholder.png";
-const DEFAULT_PLACEHOLDER = "https://img.alwandoilpress.com/placeholder.png";
 const R2_PUBLIC_BASE = "https://img.alwandoilpress.com";
 
 async function hashPin(pin) {
