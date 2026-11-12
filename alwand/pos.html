@@ -1489,7 +1489,10 @@ alert('خطأ: ' + errMsg);
             <td class="p-3 max-w-xs">${sizesSummary}</td>
             <td class="p-3 font-black text-slate-800">${totalQty}</td>
             <td class="p-3 text-center">
-              <button onclick="editProductModal(${p.id})" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-3 py-1.5 rounded-xl">تعديل</button>
+              <div class="inline-flex items-center gap-1.5">
+                <button onclick="editProductModal(${p.id})" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-3 py-1.5 rounded-xl">تعديل</button>
+                <button onclick="deleteProduct(${p.id}, '${String(p.name_ar).replace(/'/g, "\\'")}')" class="text-xs bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white font-bold px-3 py-1.5 rounded-xl transition">حذف</button>
+              </div>
             </td>
           </tr>
         `;
@@ -1697,6 +1700,28 @@ function updateMainImgPreview(url) {
     }
     
     async function saveProductData() {
+      async function deleteProduct(pid, nameAr) {
+      if (!confirm(`هل أنت متأكد من حذف المنتج "${nameAr}"؟\nسيتم إخفاؤه من المتجر ونقطة البيع مع الحفاظ على سجل الفواتير السابقة.`)) {
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/manage/product/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: pid })
+        });
+        const d = await res.json();
+        if (res.ok && d.success) {
+          await loadCatalog();
+          renderInventoryTable();
+        } else {
+          alert('فشل حذف المنتج: ' + (d.error || d.message || 'خطأ غير معروف'));
+        }
+      } catch (err) {
+        alert('تعذر الاتصال بالخادم');
+      }
+    }
       const id = document.getElementById('edit-prod-id').value;
       const category = document.getElementById('edit-prod-category').value.trim();
       const name_ar = document.getElementById('edit-prod-name-ar').value.trim();
