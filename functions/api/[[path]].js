@@ -620,6 +620,22 @@ export async function onRequest(context) {
       return jsonResponse({ success: true, product_id: productId });
     }
 
+    // 9.5 POST /api/manage/product/delete
+    if (method === "POST" && path === "manage/product/delete") {
+      const body = await request.json();
+      const productId = body.id;
+
+      if (!productId) {
+        return jsonResponse({ error: "معرف المنتج مطلوب" }, 400);
+      }
+
+      await db.prepare("UPDATE products SET is_active = 0 WHERE id = ?")
+        .bind(productId)
+        .run();
+
+      return jsonResponse({ success: true });
+    }
+    
     // 10. Reports Summary (Separate queries to avoid Cartesian duplication)
     if (method === "GET" && path === "reports") {
       const url = new URL(request.url);
