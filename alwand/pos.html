@@ -9,10 +9,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@600;700&family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet" />
   <style>
+    html, body { height: 100dvh; max-height: 100dvh; }
     body { font-family: 'Tajawal', sans-serif; user-select: none; -webkit-user-select: none; }
     .font-heading { font-family: 'El Messiri', sans-serif; }
     ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
 
     @media print {
       body * { visibility: hidden; }
@@ -24,35 +26,35 @@
     }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-800 h-screen flex flex-col overflow-hidden">
+<body class="bg-slate-100 text-slate-800 h-[100dvh] flex flex-col overflow-hidden">
 
   <!-- ==================== PIN + USERNAME AUTH OVERLAY ==================== -->
-  <div id="auth-modal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center border border-slate-100">
-      <div class="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
-        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+  <div id="auth-modal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center border border-slate-100 my-auto">
+      <div class="w-14 h-14 bg-emerald-100 text-emerald-700 rounded-2xl flex items-center justify-center mx-auto mb-3">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
       </div>
       <h2 class="font-heading text-2xl font-bold text-slate-900 mb-1">معصرة الوند</h2>
-      <p class="text-xs text-slate-500 mb-5">تسجيل الدخول إلى نقطة البيع</p>
+      <p class="text-xs text-slate-500 mb-4">تسجيل الدخول إلى نقطة البيع</p>
 
-      <div class="space-y-2.5 mb-4 max-w-[240px] mx-auto">
+      <div class="space-y-2 mb-3.5 max-w-[240px] mx-auto">
         <input type="text" id="login-username" value="Ausama" placeholder="اسم المستخدم" class="w-full text-center text-sm font-bold py-2 bg-slate-50 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600" />
-        <input type="password" id="pin-display" readonly maxlength="4" placeholder="••••" class="w-full text-center text-2xl font-black tracking-[0.5em] py-2 bg-slate-50 border-2 border-slate-200 rounded-xl focus:outline-none" />
+        <input type="password" id="pin-display" readonly maxlength="4" placeholder="••••" class="w-full text-center text-2xl font-black tracking-[0.5em] py-1.5 bg-slate-50 border-2 border-slate-200 rounded-xl focus:outline-none" />
       </div>
 
-      <div class="grid grid-cols-3 gap-2.5 max-w-[240px] mx-auto mb-4">
-        <button onclick="pressPin('1')" class="h-12 bg-slate-100 hover:bg-slate-200 active:scale-95 text-lg font-bold rounded-2xl">1</button>
-        <button onclick="pressPin('2')" class="h-12 bg-slate-100 hover:bg-slate-200 active:scale-95 text-lg font-bold rounded-2xl">2</button>
-        <button onclick="pressPin('3')" class="h-12 bg-slate-100 hover:bg-slate-200 active:scale-95 text-lg font-bold rounded-2xl">3</button>
-        <button onclick="pressPin('4')" class="h-12 bg-slate-100 hover:bg-slate-200 active:scale-95 text-lg font-bold rounded-2xl">4</button>
-        <button onclick="pressPin('5')" class="h-12 bg-slate-100 hover:bg-slate-200 active:scale-95 text-lg font-bold rounded-2xl">5</button>
-        <button onclick="pressPin('6')" class="h-12 bg-slate-100 hover:bg-slate-200 active:scale-95 text-lg font-bold rounded-2xl">6</button>
-        <button onclick="pressPin('7')" class="h-12 bg-slate-100 hover:bg-slate-200 active:scale-95 text-lg font-bold rounded-2xl">7</button>
-        <button onclick="pressPin('8')" class="h-12 bg-slate-100 hover:bg-slate-200 active:scale-95 text-lg font-bold rounded-2xl">8</button>
-        <button onclick="pressPin('9')" class="h-12 bg-slate-100 hover:bg-slate-200 active:scale-95 text-lg font-bold rounded-2xl">9</button>
-        <button onclick="clearPin()" class="h-12 bg-rose-50 text-rose-600 hover:bg-rose-100 active:scale-95 text-xs font-bold rounded-2xl">مسح</button>
-        <button onclick="pressPin('0')" class="h-12 bg-slate-100 hover:bg-slate-200 active:scale-95 text-lg font-bold rounded-2xl">0</button>
-        <button onclick="submitPinAuth()" id="pin-login-btn" class="h-12 bg-emerald-600 hover:bg-emerald-700 text-white active:scale-95 text-xs font-bold rounded-2xl">دخول</button>
+      <div class="grid grid-cols-3 gap-2 max-w-[240px] mx-auto mb-3">
+        <button onclick="pressPin('1')" class="h-11 bg-slate-100 hover:bg-slate-200 active:scale-95 text-lg font-bold rounded-2xl">1</button>
+        <button onclick="pressPin('2')" class="h-11 bg-slate-100 hover:bg-slate-200 active:scale-95 text-lg font-bold rounded-2xl">2</button>
+        <button onclick="pressPin('3')" class="h-11 bg-slate-100 hover:bg-slate-200 active:scale-95 text-lg font-bold rounded-2xl">3</button>
+        <button onclick="pressPin('4')" class="h-11 bg-slate-100 hover:bg-slate-200 active:scale-95 text-lg font-bold rounded-2xl">4</button>
+        <button onclick="pressPin('5')" class="h-11 bg-slate-100 hover:bg-slate-200 active:scale-95 text-lg font-bold rounded-2xl">5</button>
+        <button onclick="pressPin('6')" class="h-11 bg-slate-100 hover:bg-slate-200 active:scale-95 text-lg font-bold rounded-2xl">6</button>
+        <button onclick="pressPin('7')" class="h-11 bg-slate-100 hover:bg-slate-200 active:scale-95 text-lg font-bold rounded-2xl">7</button>
+        <button onclick="pressPin('8')" class="h-11 bg-slate-100 hover:bg-slate-200 active:scale-95 text-lg font-bold rounded-2xl">8</button>
+        <button onclick="pressPin('9')" class="h-11 bg-slate-100 hover:bg-slate-200 active:scale-95 text-lg font-bold rounded-2xl">9</button>
+        <button onclick="clearPin()" class="h-11 bg-rose-50 text-rose-600 hover:bg-rose-100 active:scale-95 text-xs font-bold rounded-2xl">مسح</button>
+        <button onclick="pressPin('0')" class="h-11 bg-slate-100 hover:bg-slate-200 active:scale-95 text-lg font-bold rounded-2xl">0</button>
+        <button onclick="submitPinAuth()" id="pin-login-btn" class="h-11 bg-emerald-600 hover:bg-emerald-700 text-white active:scale-95 text-xs font-bold rounded-2xl">دخول</button>
       </div>
 
       <div id="auth-err" class="text-xs font-bold text-rose-600 hidden">اسم المستخدم أو الرمز غير صحيح</div>
@@ -60,109 +62,108 @@
   </div>
 
   <!-- ==================== TOP NAVIGATION ==================== -->
-  <header class="bg-white border-b border-slate-200 px-6 py-2.5 flex items-center justify-between flex-shrink-0">
-    <div class="flex items-center gap-6">
-      <div class="flex items-center gap-3">
+  <header class="bg-white border-b border-slate-200 px-3 sm:px-6 py-2 flex items-center justify-between gap-2 flex-shrink-0">
+    <div class="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+      <div class="flex items-center gap-2 flex-shrink-0">
         <div class="bg-emerald-600 text-white font-black text-xs px-2.5 py-1 rounded-lg">الوند</div>
-        <h1 class="font-heading font-bold text-base text-slate-900 hidden sm:block">معصرة الوند</h1>
+        <h1 class="font-heading font-bold text-base text-slate-900 hidden xl:block">معصرة الوند</h1>
       </div>
 
-      <nav class="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl text-xs font-bold">
-        <button onclick="switchTab('pos')" id="tab-btn-pos" class="px-3.5 py-1.5 rounded-xl transition bg-white text-slate-900 shadow-sm">الكاشير</button>
-        <button onclick="switchTab('returns')" id="tab-btn-returns" class="px-3.5 py-1.5 rounded-xl transition text-slate-600 hover:text-slate-900">المرتجع</button>
-        <button onclick="switchTab('products')" id="tab-btn-products" class="px-3.5 py-1.5 rounded-xl transition text-slate-600 hover:text-slate-900 inline-flex items-center gap-1.5">
+      <nav class="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl text-xs font-bold overflow-x-auto no-scrollbar">
+        <button onclick="switchTab('pos')" id="tab-btn-pos" class="px-3 py-1.5 rounded-xl transition bg-white text-slate-900 shadow-sm whitespace-nowrap">الكاشير</button>
+        <button onclick="switchTab('returns')" id="tab-btn-returns" class="px-3 py-1.5 rounded-xl transition text-slate-600 hover:text-slate-900 whitespace-nowrap">المرتجع</button>
+        <button onclick="switchTab('products')" id="tab-btn-products" class="px-3 py-1.5 rounded-xl transition text-slate-600 hover:text-slate-900 inline-flex items-center gap-1.5 whitespace-nowrap">
           <span>المنتجات والمخزن</span>
           <span id="nav-low-stock-badge" class="hidden bg-amber-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full leading-none">0</span>
         </button>
-        <button onclick="switchTab('customers')" id="tab-btn-customers" class="px-3.5 py-1.5 rounded-xl transition text-slate-600 hover:text-slate-900">الزبائن</button>
-        <button onclick="switchTab('reports')" id="tab-btn-reports" class="px-3.5 py-1.5 rounded-xl transition text-slate-600 hover:text-slate-900">المبيعات والأرباح</button>
-        <button onclick="switchTab('staff')" id="tab-btn-staff" class="px-3.5 py-1.5 rounded-xl transition text-slate-600 hover:text-slate-900">الموظفين</button>
+        <button onclick="switchTab('customers')" id="tab-btn-customers" class="px-3 py-1.5 rounded-xl transition text-slate-600 hover:text-slate-900 whitespace-nowrap">الزبائن</button>
+        <button onclick="switchTab('reports')" id="tab-btn-reports" class="px-3 py-1.5 rounded-xl transition text-slate-600 hover:text-slate-900 whitespace-nowrap">المبيعات والأرباح</button>
+        <button onclick="switchTab('staff')" id="tab-btn-staff" class="px-3 py-1.5 rounded-xl transition text-slate-600 hover:text-slate-900 whitespace-nowrap">الموظفين</button>
       </nav>
     </div>
 
-    <div class="flex items-center gap-4">
-      <div class="flex items-center gap-2 text-xs bg-slate-100 px-3 py-1.5 rounded-full font-bold">
+    <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+      <div class="flex items-center gap-1.5 text-xs bg-slate-100 px-2.5 py-1.5 rounded-full font-bold">
         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
         <span id="staff-name-badge">كاشير</span>
-        <span id="staff-role-badge" class="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded"></span>
+        <span id="staff-role-badge" class="hidden sm:inline text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded"></span>
       </div>
       <button onclick="lockRegister()" class="text-xs font-bold text-slate-400 hover:text-rose-600 flex items-center gap-1">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-        قفل
+        <span class="hidden sm:inline">قفل</span>
       </button>
     </div>
   </header>
 
   <!-- ==================== VIEW 1: POS REGISTER ==================== -->
-  <main id="view-pos" class="flex-1 flex flex-col lg:flex-row overflow-hidden">
+  <main id="view-pos" class="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden">
     
     <!-- Catalog Area -->
-    <div class="flex-1 flex flex-col p-4 overflow-hidden border-b lg:border-b-0 lg:border-l border-slate-200">
-      <div class="flex items-center gap-3 mb-4 flex-shrink-0">
-        <div class="relative flex-1">
-          <svg class="w-4 h-4 text-slate-400 absolute right-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
-          <input type="text" id="pos-search" oninput="handlePosSearch(this.value)" onkeydown="checkBarcodeScan(event)" placeholder="ابحث باسم الزيت أو امسح الباركود..." class="w-full bg-white border border-slate-200 rounded-2xl pr-10 pl-4 py-2 text-sm focus:outline-none focus:border-emerald-600" />
+    <div class="flex-1 min-h-0 flex flex-col p-3 sm:p-4 overflow-hidden border-b md:border-b-0 md:border-l border-slate-200">
+      <div class="flex flex-wrap sm:flex-nowrap items-center gap-2 mb-3 flex-shrink-0">
+        <div class="relative flex-1 min-w-[160px]">
+          <svg class="w-4 h-4 text-slate-400 absolute right-3.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"/></svg>
+          <input type="text" id="pos-search" oninput="handlePosSearch(this.value)" onkeydown="checkBarcodeScan(event)" placeholder="ابحث باسم الزيت أو امسح الباركود..." class="w-full bg-white border border-slate-200 rounded-2xl pr-10 pl-3 py-2 text-xs sm:text-sm focus:outline-none focus:border-emerald-600" />
         </div>
-        <div id="category-tabs" class="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-lg"></div>
+        <div id="category-tabs" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5 max-w-full sm:max-w-xs lg:max-w-lg"></div>
       </div>
 
       <!-- Locked card rows to avoid elongation -->
-      <div id="pos-grid" class="flex-1 overflow-y-auto grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 pr-1 content-start auto-rows-max"></div>
+      <div id="pos-grid" class="flex-1 min-h-0 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3 pr-1 content-start auto-rows-max"></div>
     </div>
 
-    <!-- Responsive Register Drawer -->
-    <aside class="w-full lg:w-[380px] xl:w-[420px] bg-white flex flex-col h-1/2 lg:h-full shadow-xl flex-shrink-0 border-t lg:border-t-0 lg:border-r border-slate-200">
+    <!-- Responsive Register Drawer (Side-by-side on tablet landscape >=768px, pinned bottom on portrait) -->
+    <aside class="w-full md:w-[320px] lg:w-[370px] xl:w-[410px] bg-white flex flex-col h-[52%] md:h-full min-h-0 shadow-xl flex-shrink-0 border-t md:border-t-0 md:border-r border-slate-200">
       
-      <!-- Order Mode: In-Store vs Delivery -->
-      <div class="p-3 bg-slate-50 border-b border-slate-200">
-        <div class="grid grid-cols-2 gap-2 mb-2">
-          <button type="button" onclick="setOrderMode('pos')" id="mode-btn-pos" class="py-2 rounded-xl text-xs font-bold border-2 border-emerald-600 bg-emerald-50 text-emerald-800 transition">
+      <!-- Order Mode & Optional Customer (Scrollable when expanded so checkout button stays pinned) -->
+      <div class="p-2.5 bg-slate-50 border-b border-slate-200 max-h-[42%] overflow-y-auto flex-shrink-0">
+        <div class="grid grid-cols-2 gap-1.5">
+          <button type="button" onclick="setOrderMode('pos')" id="mode-btn-pos" class="py-1.5 rounded-xl text-xs font-bold border-2 border-emerald-600 bg-emerald-50 text-emerald-800 transition">
             🏪 مباشر في المعمل
           </button>
-          <button type="button" onclick="setOrderMode('delivery')" id="mode-btn-delivery" class="py-2 rounded-xl text-xs font-bold border border-slate-200 text-slate-600 bg-white transition">
+          <button type="button" onclick="setOrderMode('delivery')" id="mode-btn-delivery" class="py-1.5 rounded-xl text-xs font-bold border border-slate-200 text-slate-600 bg-white transition">
             🛵 توصيل خارجي
           </button>
         </div>
 
-        <div id="delivery-details-box" class="hidden space-y-2 pt-2 border-t border-slate-200">
+        <div id="delivery-details-box" class="hidden space-y-1.5 pt-2 mt-2 border-t border-slate-200">
           <div>
-            <label class="block text-[10px] font-bold text-slate-500 mb-1">منطقة التوصيل:</label>
-            <select id="pos-delivery-zone" onchange="updateDeliveryFeeFromZone()" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none focus:border-emerald-600">
+            <label class="block text-[10px] font-bold text-slate-500 mb-0.5">منطقة التوصيل:</label>
+            <select id="pos-delivery-zone" onchange="updateDeliveryFeeFromZone()" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1 text-xs font-bold focus:outline-none focus:border-emerald-600">
               <option value="2000">خانقين - داخل المدينة (2,000 د.ع)</option>
               <option value="3000">خانقين - أطراف ونواحي (3,000 د.ع)</option>
               <option value="3000">محافظة ديالى (3,000 د.ع)</option>
               <option value="5000">بغداد وكافة المحافظات (5,000 د.ع)</option>
             </select>
           </div>
-          <input type="text" id="pos-delivery-address" placeholder="العنوان التفصيلي" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none focus:border-emerald-600" />
-          <input type="text" id="pos-delivery-landmark" placeholder="أقرب نقطة دالة" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none focus:border-emerald-600" />
+          <input type="text" id="pos-delivery-address" placeholder="العنوان التفصيلي" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1 text-xs font-bold focus:outline-none focus:border-emerald-600" />
+          <input type="text" id="pos-delivery-landmark" placeholder="أقرب نقطة دالة" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1 text-xs font-bold focus:outline-none focus:border-emerald-600" />
         </div>
 
-        <div class="mt-2 pt-2 border-t border-slate-200/60">
+        <div class="mt-1.5 pt-1.5 border-t border-slate-200/60">
           <button type="button" onclick="toggleCustomerDrawer()" class="flex justify-between items-center w-full text-xs font-bold text-slate-600 hover:text-slate-900">
             <span>👤 بيانات الزبون (اختياري)</span>
             <span id="cust-toggle-icon">＋</span>
           </button>
           
-          <div id="customer-drawer" class="hidden space-y-2 mt-2">
-            <div class="flex gap-2">
-              <input type="tel" id="reg-cust-phone" placeholder="رقم الهاتف (07...)" dir="ltr" class="flex-1 bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none focus:border-emerald-600" />
-              <button onclick="lookupCustomerForSale()" class="bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-xl hover:bg-black">فحص</button>
+          <div id="customer-drawer" class="hidden space-y-1.5 mt-1.5">
+            <div class="flex gap-1.5">
+              <input type="tel" id="reg-cust-phone" placeholder="رقم الهاتف (07...)" dir="ltr" class="flex-1 bg-white border border-slate-200 rounded-xl px-2.5 py-1 text-xs font-bold focus:outline-none focus:border-emerald-600" />
+              <button onclick="lookupCustomerForSale()" class="bg-slate-900 text-white text-xs font-bold px-3 py-1 rounded-xl hover:bg-black">فحص</button>
             </div>
-            <input type="text" id="reg-cust-name-input" placeholder="اسم الزبون (اختياري)" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none focus:border-emerald-600" />
-            <div id="reg-cust-info" class="hidden text-[11px] bg-emerald-50 text-emerald-900 p-2 rounded-xl border border-emerald-200 flex justify-between items-center">
+            <input type="text" id="reg-cust-name-input" placeholder="اسم الزبون (اختياري)" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1 text-xs font-bold focus:outline-none focus:border-emerald-600" />
+            <div id="reg-cust-info" class="hidden text-[11px] bg-emerald-50 text-emerald-900 p-1.5 rounded-xl border border-emerald-200 flex justify-between items-center">
               <div>
                 <span id="reg-cust-name-badge" class="font-black"></span>
-                <span id="reg-cust-spent-badge" class="text-slate-500 mr-2"></span>
+                <span id="reg-cust-spent-badge" class="text-slate-500 mr-1"></span>
               </div>
               <button onclick="clearSaleCustomer()" class="text-rose-600 font-bold hover:underline">إلغاء</button>
             </div>
           </div>
         </div>
-
       </div>
 
-      <div class="p-3 border-b border-slate-100 flex items-center justify-between">
+      <div class="px-3 py-2 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
         <div class="flex items-center gap-2">
           <h2 class="font-heading font-bold text-sm text-slate-900">سجل البيع</h2>
           <span id="pos-cart-badge" class="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2 py-0.5 rounded-full">0 قطع</span>
@@ -170,9 +171,10 @@
         <button onclick="clearCart()" class="text-xs font-bold text-slate-400 hover:text-rose-600">إفراغ</button>
       </div>
 
-      <div id="pos-cart-list" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
+      <div id="pos-cart-list" class="flex-1 min-h-[64px] overflow-y-auto p-2.5 space-y-1.5"></div>
 
-      <div class="p-4 bg-slate-50 border-t border-slate-200 space-y-3">
+      <!-- Pinned Checkout Footer -->
+      <div class="p-3 bg-slate-50 border-t border-slate-200 space-y-2 flex-shrink-0">
         <div class="space-y-1 text-xs font-bold">
           <div class="flex justify-between text-slate-500">
             <span>المجموع:</span>
@@ -184,15 +186,15 @@
           </div>
           <div class="flex justify-between items-center text-slate-500">
             <span>خصم (د.ع):</span>
-            <input type="number" id="input-discount" value="0" min="0" step="500" oninput="recalcTotals()" class="w-24 text-center bg-white border border-slate-200 rounded-lg py-1 text-slate-900 font-bold focus:outline-none focus:border-emerald-600" />
+            <input type="number" id="input-discount" value="0" min="0" step="500" oninput="recalcTotals()" class="w-24 text-center bg-white border border-slate-200 rounded-lg py-0.5 text-slate-900 font-bold focus:outline-none focus:border-emerald-600" />
           </div>
-          <div class="flex justify-between text-base font-black text-slate-900 pt-1.5 border-t border-slate-200">
+          <div class="flex justify-between text-sm sm:text-base font-black text-slate-900 pt-1 border-t border-slate-200">
             <span>الصافي المطلوب:</span>
             <span id="val-total" class="text-emerald-700">0 د.ع</span>
           </div>
         </div>
 
-        <button onclick="openPaymentModal()" id="btn-proceed-pay" disabled class="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-black py-3 rounded-2xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2">
+        <button onclick="openPaymentModal()" id="btn-proceed-pay" disabled class="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-black py-2.5 sm:py-3 rounded-2xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 text-xs sm:text-sm">
           <span>دفع وإنهاء الفاتورة</span>
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
         </button>
@@ -201,18 +203,18 @@
   </main>
 
   <!-- ==================== VIEW 2: RETURNS SECTION ==================== -->
-  <main id="view-returns" class="flex-1 flex flex-col p-6 overflow-hidden hidden bg-white">
-    <div class="max-w-3xl mx-auto w-full flex flex-col h-full">
+  <main id="view-returns" class="flex-1 min-h-0 flex flex-col p-4 sm:p-6 overflow-hidden hidden bg-white">
+    <div class="max-w-3xl mx-auto w-full flex flex-col h-full min-h-0">
       <h2 class="font-heading text-2xl font-bold text-slate-900 mb-1">إرجاع بضاعة وإلغاء فواتير</h2>
-      <p class="text-xs text-slate-500 mb-6">أدخل رقم الفاتورة للبحث واسترجاع المواد إلى المخزن</p>
+      <p class="text-xs text-slate-500 mb-4">أدخل رقم الفاتورة للبحث واسترجاع المواد إلى المخزن</p>
 
-      <div class="flex gap-2 mb-6">
+      <div class="flex gap-2 mb-4 flex-shrink-0">
         <input type="text" id="return-search-order" placeholder="أدخل رقم الفاتورة (مثلاً: POS-2611-1234)" class="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-emerald-600" />
         <button onclick="fetchOrderForReturn()" class="bg-slate-900 hover:bg-black text-white font-bold text-sm px-6 py-3 rounded-2xl">بحث عن الفاتورة</button>
       </div>
 
-      <div id="return-details-box" class="flex-1 overflow-y-auto border border-slate-200 rounded-3xl p-6 bg-slate-50/50 hidden space-y-6">
-        <div class="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-200">
+      <div id="return-details-box" class="flex-1 min-h-0 overflow-y-auto border border-slate-200 rounded-3xl p-4 sm:p-6 bg-slate-50/50 hidden space-y-5">
+        <div class="flex flex-wrap justify-between items-center gap-2 bg-white p-4 rounded-2xl border border-slate-200">
           <div>
             <span class="text-xs text-slate-400 block font-bold">رقم الفاتورة</span>
             <span id="ret-order-number" class="text-lg font-black text-slate-900"></span>
@@ -250,7 +252,7 @@
           </div>
         </div>
 
-        <div class="flex justify-end gap-3 pt-2">
+        <div class="flex flex-wrap justify-end gap-3 pt-2">
           <button onclick="commitOrderReturn(true)" class="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs px-6 py-3 rounded-2xl shadow-md transition">
             إرجاع الفاتورة بالكامل وإلغاؤها
           </button>
@@ -263,8 +265,8 @@
   </main>
 
   <!-- ==================== VIEW 3: PRODUCT & STOCK MANAGEMENT ==================== -->
-  <main id="view-products" class="flex-1 flex flex-col p-6 overflow-hidden hidden bg-white">
-    <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
+  <main id="view-products" class="flex-1 min-h-0 flex flex-col p-4 sm:p-6 overflow-hidden hidden bg-white">
+    <div class="flex flex-wrap justify-between items-center gap-3 mb-4 flex-shrink-0">
       <div>
         <h2 class="font-heading text-2xl font-bold text-slate-900">إدارة المنتجات والمخزون</h2>
         <p class="text-xs text-slate-500">إضافة منتجات، عروض التخفيض، البكجات، وصور الأحجام</p>
@@ -288,7 +290,7 @@
       </div>
     </div>
 
-    <div class="flex-1 overflow-y-auto border border-slate-200 rounded-2xl">
+    <div class="flex-1 min-h-0 overflow-auto border border-slate-200 rounded-2xl">
       <table class="w-full text-right text-xs">
         <thead class="bg-slate-50 border-b border-slate-200 sticky top-0 font-bold text-slate-600">
           <tr>
@@ -306,17 +308,17 @@
   </main>
 
   <!-- ==================== VIEW 4: CUSTOMER CRM ==================== -->
-  <main id="view-customers" class="flex-1 flex flex-col p-6 overflow-hidden hidden bg-white">
-    <div class="max-w-4xl mx-auto w-full flex flex-col h-full">
+  <main id="view-customers" class="flex-1 min-h-0 flex flex-col p-4 sm:p-6 overflow-hidden hidden bg-white">
+    <div class="max-w-4xl mx-auto w-full flex flex-col h-full min-h-0">
       <h2 class="font-heading text-2xl font-bold text-slate-900 mb-1">سجل وبيانات الزبائن</h2>
-      <p class="text-xs text-slate-500 mb-6">البحث برقم الهاتف، استعراض المشتريات السابقة، والعناوين</p>
+      <p class="text-xs text-slate-500 mb-4">البحث برقم الهاتف، استعراض المشتريات السابقة، والعناوين</p>
 
-      <div class="flex gap-2 mb-6">
+      <div class="flex gap-2 mb-4 flex-shrink-0">
         <input type="tel" id="crm-search-phone" placeholder="أدخل رقم هاتف الزبون (07...)" dir="ltr" class="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-emerald-600" />
         <button onclick="fetchCustomerProfile()" class="bg-slate-900 hover:bg-black text-white font-bold text-sm px-6 py-3 rounded-2xl">بحث</button>
       </div>
 
-      <div id="crm-profile-view" class="flex-1 overflow-y-auto border border-slate-100 rounded-3xl p-6 bg-slate-50/50 hidden space-y-6">
+      <div id="crm-profile-view" class="flex-1 min-h-0 overflow-y-auto border border-slate-100 rounded-3xl p-4 sm:p-6 bg-slate-50/50 hidden space-y-6">
         <div class="flex justify-between items-start">
           <div>
             <h3 id="crm-cust-name" class="font-heading text-2xl font-bold text-slate-900"></h3>
@@ -350,7 +352,7 @@
   </main>
 
   <!-- ==================== VIEW 5: REPORTS & TRANSACTIONS ==================== -->
-  <main id="view-reports" class="flex-1 flex flex-col p-6 overflow-y-auto hidden bg-white">
+  <main id="view-reports" class="flex-1 min-h-0 flex flex-col p-4 sm:p-6 overflow-y-auto hidden bg-white">
     <div class="max-w-6xl mx-auto w-full space-y-6">
       
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200">
@@ -358,7 +360,7 @@
           <h2 class="font-heading text-2xl font-bold text-slate-900">سجل المعاملات والأرباح</h2>
           <p class="text-xs text-slate-500">استعراض كل فاتورة بيع بتفاصيلها الكاملة، وتعديلها أو مراجعتها</p>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
           <input type="date" id="report-start-date" class="bg-white border border-slate-200 text-xs font-bold p-2 rounded-xl" />
           <span class="text-xs font-bold text-slate-400">إلى</span>
           <input type="date" id="report-end-date" class="bg-white border border-slate-200 text-xs font-bold p-2 rounded-xl" />
@@ -369,24 +371,24 @@
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl">
           <span class="text-xs font-bold text-emerald-800 block">إجمالي المبيعات النشطة</span>
-          <span id="rep-gross-sales" class="text-2xl font-black text-emerald-700">0 د.ع</span>
+          <span id="rep-gross-sales" class="text-xl sm:text-2xl font-black text-emerald-700">0 د.ع</span>
         </div>
         <div class="bg-slate-50 border border-slate-200 p-4 rounded-2xl">
           <span class="text-xs font-bold text-slate-500 block">التكلفة (COGS)</span>
-          <span id="rep-cogs" class="text-2xl font-black text-slate-800">0 د.ع</span>
+          <span id="rep-cogs" class="text-xl sm:text-2xl font-black text-slate-800">0 د.ع</span>
         </div>
         <div class="bg-blue-50 border border-blue-200 p-4 rounded-2xl">
           <span class="text-xs font-bold text-blue-800 block">صافي الربح</span>
-          <span id="rep-net-profit" class="text-2xl font-black text-blue-700">0 د.ع</span>
+          <span id="rep-net-profit" class="text-xl sm:text-2xl font-black text-blue-700">0 د.ع</span>
         </div>
         <div class="bg-purple-50 border border-purple-200 p-4 rounded-2xl">
           <span class="text-xs font-bold text-purple-800 block">هامش الربح %</span>
-          <span id="rep-margin" class="text-2xl font-black text-purple-700">0%</span>
+          <span id="rep-margin" class="text-xl sm:text-2xl font-black text-purple-700">0%</span>
         </div>
       </div>
 
       <div class="border border-slate-200 rounded-2xl p-4">
-        <div class="flex justify-between items-center mb-4">
+        <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
           <h3 class="font-bold text-sm text-slate-900">سجل فواتير البيع المنفصلة (Transactions)</h3>
           <input type="text" id="report-order-search" oninput="filterTransactionsList(this.value)" placeholder="بحث برقم الفاتورة أو هاتف الزبون..." class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold w-64" />
         </div>
@@ -397,9 +399,9 @@
   </main>
 
   <!-- ==================== VIEW 6: STAFF MANAGEMENT ==================== -->
-  <main id="view-staff" class="flex-1 flex flex-col p-6 overflow-hidden hidden bg-white">
-    <div class="max-w-4xl mx-auto w-full flex flex-col h-full">
-      <div class="flex justify-between items-center mb-6">
+  <main id="view-staff" class="flex-1 min-h-0 flex flex-col p-4 sm:p-6 overflow-hidden hidden bg-white">
+    <div class="max-w-4xl mx-auto w-full flex flex-col h-full min-h-0">
+      <div class="flex justify-between items-center mb-4 flex-shrink-0">
         <div>
           <h2 class="font-heading text-2xl font-bold text-slate-900">إدارة الموظفين والصلاحيات</h2>
           <p class="text-xs text-slate-500">تعيين الأدوار الوظيفية، رموز الدخول (PIN)، وصلاحيات الوصول</p>
@@ -409,7 +411,7 @@
         </button>
       </div>
 
-      <div class="flex-1 overflow-y-auto border border-slate-200 rounded-2xl">
+      <div class="flex-1 min-h-0 overflow-auto border border-slate-200 rounded-2xl">
         <table class="w-full text-right text-xs">
           <thead class="bg-slate-50 border-b border-slate-200 sticky top-0 font-bold text-slate-600">
             <tr>
@@ -428,14 +430,14 @@
 
   <!-- ==================== PRODUCT EDITOR MODAL ==================== -->
   <div id="product-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden border border-slate-100">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90dvh] flex flex-col overflow-hidden border border-slate-100">
       
-      <div class="p-4 border-b border-slate-100 flex justify-between items-center">
+      <div class="p-4 border-b border-slate-100 flex justify-between items-center flex-shrink-0">
         <h3 id="product-modal-title" class="font-heading font-bold text-lg text-slate-900">إضافة منتج جديد</h3>
         <button onclick="closeProductModal()" class="text-slate-400 hover:text-slate-900 text-xl font-bold">✕</button>
       </div>
 
-      <div class="flex-1 overflow-y-auto p-6 space-y-4">
+      <div class="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-4">
         <input type="hidden" id="edit-prod-id" />
 
         <div>
@@ -499,7 +501,7 @@
 
       </div>
 
-      <div class="p-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
+      <div class="p-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-2 flex-shrink-0">
         <button onclick="closeProductModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-200">إلغاء</button>
         <button onclick="saveProductData()" id="btn-save-prod" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-xl text-xs font-bold">حفظ المنتج</button>
       </div>
@@ -508,7 +510,7 @@
 
   <!-- ==================== STAFF MODAL ==================== -->
   <div id="staff-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 border border-slate-100">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[92dvh] overflow-y-auto p-6 border border-slate-100">
       <div class="flex justify-between items-center mb-4">
         <h3 id="staff-modal-title" class="font-heading font-bold text-xl text-slate-900">بيانات الموظف</h3>
         <button onclick="closeStaffModal()" class="text-slate-400 hover:text-slate-800 text-xl font-bold">✕</button>
@@ -571,7 +573,7 @@
 
   <!-- ==================== ORDER EDIT MODAL ==================== -->
   <div id="order-edit-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 border border-slate-100">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[92dvh] overflow-y-auto p-6 border border-slate-100">
       <div class="flex justify-between items-center mb-4">
         <h3 class="font-heading font-bold text-xl text-slate-900">تعديل بيانات الفاتورة</h3>
         <button onclick="closeOrderEditModal()" class="text-slate-400 hover:text-slate-800 text-xl font-bold">✕</button>
@@ -614,34 +616,34 @@
 
   <!-- ==================== PAYMENT MODAL ==================== -->
   <div id="pay-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 border border-slate-100">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="font-heading font-bold text-xl text-slate-900">إنهاء الفاتورة واستلام المبلغ</h3>
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[92dvh] overflow-y-auto p-5 sm:p-6 border border-slate-100">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="font-heading font-bold text-lg sm:text-xl text-slate-900">إنهاء الفاتورة واستلام المبلغ</h3>
         <button onclick="closePaymentModal()" class="text-slate-400 hover:text-slate-800 text-xl font-bold">✕</button>
       </div>
 
-      <div class="grid grid-cols-3 gap-2 mb-4">
-        <button type="button" onclick="setPaymentMethod('cash')" id="pay-method-cash" class="py-2.5 rounded-xl border-2 border-emerald-600 bg-emerald-50 text-emerald-800 text-xs font-bold">نقداً (Cash)</button>
-        <button type="button" onclick="setPaymentMethod('zaincash')" id="pay-method-zaincash" class="py-2.5 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold">زين كاش</button>
-        <button type="button" onclick="setPaymentMethod('card')" id="pay-method-card" class="py-2.5 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold">جهاز الدفع</button>
+      <div class="grid grid-cols-3 gap-2 mb-3">
+        <button type="button" onclick="setPaymentMethod('cash')" id="pay-method-cash" class="py-2 rounded-xl border-2 border-emerald-600 bg-emerald-50 text-emerald-800 text-xs font-bold">نقداً (Cash)</button>
+        <button type="button" onclick="setPaymentMethod('zaincash')" id="pay-method-zaincash" class="py-2 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold">زين كاش</button>
+        <button type="button" onclick="setPaymentMethod('card')" id="pay-method-card" class="py-2 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold">جهاز الدفع</button>
       </div>
 
-      <div class="bg-slate-50 p-4 rounded-2xl mb-4 text-center">
-        <span class="text-xs text-slate-500 font-bold block mb-1">المبلغ المطلوب</span>
-        <span id="modal-due-amount" class="text-3xl font-black text-slate-900">0 د.ع</span>
+      <div class="bg-slate-50 p-3 rounded-2xl mb-3 text-center">
+        <span class="text-xs text-slate-500 font-bold block mb-0.5">المبلغ المطلوب</span>
+        <span id="modal-due-amount" class="text-2xl sm:text-3xl font-black text-slate-900">0 د.ع</span>
       </div>
 
-      <div class="space-y-3 mb-6">
+      <div class="space-y-2.5 mb-4">
         <label class="block text-xs font-bold text-slate-500">المبلغ المستلم من الزبون (د.ع):</label>
-        <input type="number" id="cash-tendered-input" oninput="calculateChange()" class="w-full text-center text-2xl font-black py-2.5 bg-slate-50 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600" />
+        <input type="number" id="cash-tendered-input" oninput="calculateChange()" class="w-full text-center text-xl sm:text-2xl font-black py-2 bg-slate-50 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600" />
         <div class="grid grid-cols-4 gap-1.5" id="quick-cash-btns"></div>
-        <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 flex justify-between items-center">
+        <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-2.5 flex justify-between items-center">
           <span class="text-xs font-bold text-emerald-800">الباقي للزبون:</span>
-          <span id="modal-change-due" class="text-xl font-black text-emerald-700">0 د.ع</span>
+          <span id="modal-change-due" class="text-lg sm:text-xl font-black text-emerald-700">0 د.ع</span>
         </div>
       </div>
 
-      <button onclick="commitPosSale()" id="btn-confirm-sale" class="w-full bg-slate-900 hover:bg-black text-white font-bold py-3.5 rounded-xl shadow-lg transition active:scale-95">
+      <button onclick="commitPosSale()" id="btn-confirm-sale" class="w-full bg-slate-900 hover:bg-black text-white font-bold py-3 rounded-xl shadow-lg transition active:scale-95 text-sm">
         تأكيد البيع وحفظ الفاتورة
       </button>
     </div>
@@ -696,7 +698,7 @@
     let activeReturnOrder = null;
     let allTransactionsCache = [];
 
-let lowStockThreshold = Number(localStorage.getItem('alwand_low_stock_threshold')) || 5;
+    let lowStockThreshold = Number(localStorage.getItem('alwand_low_stock_threshold')) || 5;
     let showLowStockOnly = false;
 
     function isVariantOutOfStock(v) {
@@ -750,7 +752,7 @@ let lowStockThreshold = Number(localStorage.getItem('alwand_low_stock_threshold'
       }
       renderInventoryTable();
     }
-    
+
     // --- 1. PIN & User Auth ---
     function pressPin(d) {
       if (pinBuffer.length < 4) {
@@ -836,9 +838,9 @@ let lowStockThreshold = Number(localStorage.getItem('alwand_low_stock_threshold'
         if (view) view.classList.toggle('hidden', t !== tabId);
         if (btn) {
           if (t === tabId) {
-            btn.className = 'px-3.5 py-1.5 rounded-xl transition bg-white text-slate-900 shadow-sm';
+            btn.className = 'px-3 py-1.5 rounded-xl transition bg-white text-slate-900 shadow-sm whitespace-nowrap';
           } else {
-            btn.className = 'px-3.5 py-1.5 rounded-xl transition text-slate-600 hover:text-slate-900';
+            btn.className = 'px-3 py-1.5 rounded-xl transition text-slate-600 hover:text-slate-900 whitespace-nowrap';
           }
         }
       });
@@ -863,13 +865,13 @@ let lowStockThreshold = Number(localStorage.getItem('alwand_low_stock_threshold'
       const feeRow = document.getElementById('delivery-fee-row');
 
       if (mode === 'pos') {
-        posBtn.className = 'py-2 rounded-xl text-xs font-bold border-2 border-emerald-600 bg-emerald-50 text-emerald-800 transition';
-        delBtn.className = 'py-2 rounded-xl text-xs font-bold border border-slate-200 text-slate-600 bg-white transition';
+        posBtn.className = 'py-1.5 rounded-xl text-xs font-bold border-2 border-emerald-600 bg-emerald-50 text-emerald-800 transition';
+        delBtn.className = 'py-1.5 rounded-xl text-xs font-bold border border-slate-200 text-slate-600 bg-white transition';
         delBox.classList.add('hidden');
         feeRow.classList.add('hidden');
       } else {
-        delBtn.className = 'py-2 rounded-xl text-xs font-bold border-2 border-emerald-600 bg-emerald-50 text-emerald-800 transition';
-        posBtn.className = 'py-2 rounded-xl text-xs font-bold border border-slate-200 text-slate-600 bg-white transition';
+        delBtn.className = 'py-1.5 rounded-xl text-xs font-bold border-2 border-emerald-600 bg-emerald-50 text-emerald-800 transition';
+        posBtn.className = 'py-1.5 rounded-xl text-xs font-bold border border-slate-200 text-slate-600 bg-white transition';
         delBox.classList.remove('hidden');
         feeRow.classList.remove('hidden');
         document.getElementById('customer-drawer').classList.remove('hidden');
@@ -1045,7 +1047,7 @@ let lowStockThreshold = Number(localStorage.getItem('alwand_low_stock_threshold'
       badge.textContent = `${totalCount} قطع`;
 
       if (!posCart.length) {
-        list.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-slate-400 text-xs font-bold py-16">السجل فارغ. اختر من المواد لإضافتها</div>`;
+        list.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-slate-400 text-xs font-bold py-6 text-center">السجل فارغ. اختر من المواد لإضافتها</div>`;
       } else {
         list.innerHTML = posCart.map(item => `
           <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-2 flex items-center justify-between gap-2">
@@ -1053,7 +1055,7 @@ let lowStockThreshold = Number(localStorage.getItem('alwand_low_stock_threshold'
               <h5 class="text-xs font-black text-slate-900 truncate">${item.name_ar}</h5>
               <p class="text-[10px] font-bold text-slate-500">${item.size} · ${(item.price).toLocaleString()} د.ع</p>
             </div>
-            <div class="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-1.5 py-0.5">
+            <div class="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-1.5 py-0.5 flex-shrink-0">
               <button onclick="updateQty('${item.key}', -1)" class="w-6 h-6 font-bold text-slate-600 hover:text-black">－</button>
               <span class="w-4 text-center text-xs font-black">${item.qty}</span>
               <button onclick="updateQty('${item.key}', 1)" class="w-6 h-6 font-bold text-slate-600 hover:text-black">＋</button>
@@ -1150,9 +1152,9 @@ let lowStockThreshold = Number(localStorage.getItem('alwand_low_stock_threshold'
       ['cash', 'zaincash', 'card'].forEach(x => {
         const btn = document.getElementById(`pay-method-${x}`);
         if (x === m) {
-          btn.className = 'py-2.5 rounded-xl border-2 border-emerald-600 bg-emerald-50 text-emerald-800 text-xs font-bold';
+          btn.className = 'py-2 rounded-xl border-2 border-emerald-600 bg-emerald-50 text-emerald-800 text-xs font-bold';
         } else {
-          btn.className = 'py-2.5 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold';
+          btn.className = 'py-2 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold';
         }
       });
     }
@@ -1231,7 +1233,7 @@ let lowStockThreshold = Number(localStorage.getItem('alwand_low_stock_threshold'
           loadCatalog();
         } else {
           const errMsg = result.message ? `${result.error}: ${result.message}` : (result.error || 'فشل إتمام البيع');
-alert('خطأ: ' + errMsg);
+          alert('خطأ: ' + errMsg);
         }
       } catch (err) {
         alert('تعذر الاتصال بالخادم');
@@ -1302,7 +1304,7 @@ alert('خطأ: ' + errMsg);
         document.getElementById('ret-order-meta').textContent = `${new Date(order.created_at).toLocaleString('ar-IQ')} | الكاشير: ${order.cashier_name || 'غير محدد'}`;
 
         const statusEl = document.getElementById('ret-order-status');
-        if (order.status === 'returned') {
+        if (order.status === 'returned' || order.status === 'cancelled') {
           statusEl.textContent = 'مرتجع بالكامل (ملغاة)';
           statusEl.className = 'text-xs font-black text-rose-600 bg-rose-50 px-2 py-1 rounded-lg';
         } else {
@@ -1413,7 +1415,12 @@ alert('خطأ: ' + errMsg);
         const data = await res.json();
         allTransactionsCache = data.orders || [];
         renderTransactionsUI(allTransactionsCache);
-        async function copyReceiptNumber(orderNo, btnEl) {
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function copyReceiptNumber(orderNo, btnEl) {
       try {
         await navigator.clipboard.writeText(orderNo);
         const orig = btnEl.textContent;
@@ -1427,10 +1434,6 @@ alert('خطأ: ' + errMsg);
         }, 1500);
       } catch (err) {
         alert('رقم الفاتورة: ' + orderNo);
-      }
-    }
-      } catch (err) {
-        console.error(err);
       }
     }
 
@@ -1470,7 +1473,7 @@ alert('خطأ: ' + errMsg);
         return `
           <div class="border rounded-2xl p-4 transition shadow-sm ${cardBg}">
             <div class="flex flex-wrap justify-between items-start gap-2 mb-2 pb-2 border-b border-slate-100">
-              <div class="flex items-center gap-2">
+              <div class="flex flex-wrap items-center gap-2">
                 <span class="font-black text-sm text-slate-900 select-all" dir="ltr">${o.order_number}</span>
                 <button type="button" onclick="copyReceiptNumber('${o.order_number}', this)" title="نسخ رقم الفاتورة" class="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2 py-0.5 rounded-lg transition cursor-pointer">
                   نسخ
@@ -1487,7 +1490,7 @@ alert('خطأ: ' + errMsg);
 
             <div class="mb-2">${itemsList}</div>
 
-            <div class="text-[11px] text-slate-500 flex flex-wrap justify-between pt-1">
+            <div class="text-[11px] text-slate-500 flex flex-wrap justify-between gap-2 pt-1">
               <span>📅 ${new Date(o.created_at).toLocaleString('ar-IQ')}</span>
               ${o.customer_phone ? `<span>👤 الزبون: ${o.customer_name || 'زبون'} (${o.customer_phone})</span>` : ''}
               ${o.notes ? `<span class="text-amber-800 font-bold">ملاحظة: ${o.notes}</span>` : ''}
@@ -1705,11 +1708,12 @@ alert('خطأ: ' + errMsg);
             <div class="flex items-center gap-1.5">
               <input type="url" class="var-img flex-1 bg-white border border-slate-200 rounded-lg p-1.5 text-xs" dir="ltr" value="${v.specific_image_url || ''}" placeholder="اتركه فارغاً لأخذ الصورة العامة" />
               <label class="bg-slate-800 hover:bg-black text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg cursor-pointer whitespace-nowrap">
-                📷 رفع
+                <span>📷 رفع</span>
                 <input type="file" accept="image/*" class="hidden" onchange="handleProductImageUpload(this, 'variant')" />
               </label>
             </div>
           </div>
+        </div>
 
         <div class="flex justify-between items-center pt-1 border-t border-slate-200/60">
           <label class="flex items-center gap-1.5 text-xs font-bold cursor-pointer">
@@ -1721,7 +1725,8 @@ alert('خطأ: ' + errMsg);
       `;
       wrap.appendChild(el);
     }
-function updateMainImgPreview(url) {
+
+    function updateMainImgPreview(url) {
       const img = document.getElementById('edit-prod-main-preview');
       if (img) img.src = (url && url.trim()) ? url.trim() : 'https://img.alwandoilpress.com/placeholder.png';
     }
@@ -1803,8 +1808,8 @@ function updateMainImgPreview(url) {
         inputEl.value = '';
       }
     }
-    
-async function saveProductData() {
+
+    async function saveProductData() {
       const id = document.getElementById('edit-prod-id').value;
       const category = document.getElementById('edit-prod-category').value.trim();
       const name_ar = document.getElementById('edit-prod-name-ar').value.trim();
@@ -2026,7 +2031,7 @@ async function saveProductData() {
             <div class="bg-white p-3 rounded-2xl border border-slate-200 text-xs space-y-1">
               <div class="flex justify-between font-bold">
                 <span>طلب: ${o.order_number} (${o.channel.toUpperCase()})</span>
-                <span class="${o.status==='returned'?'text-rose-600':'text-emerald-700'}">${Number(o.total_iqd).toLocaleString()} د.ع ${o.status==='returned'?'(مرتجع)':''}</span>
+                <span class="${o.status==='returned' || o.status==='cancelled'?'text-rose-600':'text-emerald-700'}">${Number(o.total_iqd).toLocaleString()} د.ع ${o.status==='returned' || o.status==='cancelled'?'(مرتجع)':''}</span>
               </div>
               <p class="text-slate-500 text-[11px]">${(o.items || []).map(i => `${i.qty}x ${i.product_name} [${i.size}]`).join('، ')}</p>
             </div>
