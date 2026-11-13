@@ -21,6 +21,13 @@ function jsonResponse(data, status = 200) {
   });
 }
 
+function verifyAgentAuth(request, env) {
+  if (!env.AGENT_API_KEY) return true; // Allows testing before key is set
+  const authHeader = request.headers.get("Authorization") || "";
+  const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+  return token === String(env.AGENT_API_KEY).trim();
+}
+
 export async function onRequest(context) {
   const { request, env, params } = context;
 
@@ -158,7 +165,7 @@ export async function onRequest(context) {
       });
     }
 
-// 3.5 GET /api/orders/track (Public Storefront Order Lookup)
+    // 3.5 GET /api/orders/track (Public Storefront & Agent Order Lookup)
     if (method === "GET" && path === "orders/track") {
       const url = new URL(request.url);
       const rawQuery = String(url.searchParams.get("q") || "").trim();
@@ -434,7 +441,7 @@ export async function onRequest(context) {
       return jsonResponse({ success: true });
     }
 
-    // 8. POST /api/orders (Safe transaction handling for In-Store & Delivery)
+    // 8. POST /api/orders (Safe transaction handling + Instant n8n Web Order Push)
     if (method === "POST" && (path === "orders" || path === "submitOrder")) {
       const body = await request.json();
       const items = body.items || [];
@@ -444,7 +451,6 @@ export async function onRequest(context) {
       }
 
       const isDelivery = body.channel === "delivery";
-      // Database requires channel IN ('pos', 'web')
       const channel = body.channel === "web" ? "web" : "pos";
       const orderNotes = isDelivery 
         ? `[طلب توصيل] ${body.notes || ""}`.trim() 
@@ -466,7 +472,6 @@ export async function onRequest(context) {
       const cashTendered = body.cash_tendered_iqd !== undefined && body.cash_tendered_iqd !== null ? Number(body.cash_tendered_iqd) : total;
       const changeDue = Math.max(0, cashTendered - total);
 
-      // Insert order
       await db.prepare(`
         INSERT INTO orders (
           order_number, channel, status, staff_id,
@@ -562,6 +567,34 @@ export async function onRequest(context) {
         await db.batch(batchStatements);
       }
 
+      // Non-blocking alert push to n8n when a web/social order is created
+      if (channel === "web" && env.N8N_ORDER_WEBHOOK_URL) {
+        const alertPromise = fetch(env.N8N_ORDER_WEBHOOK_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(env.AGENT_API_KEY ? { "Authorization": `Bearer ${env.AGENT_API_KEY}` } : {})
+          },
+          body: JSON.stringify({
+            event: "new_web_order",
+            order_number: orderNumber,
+            customer_name: body.customer_name || "",
+            customer_phone: body.customer_phone || "",
+            address: body.address || "",
+            landmark: body.landmark || "",
+            subtotal_iqd: subtotal,
+            delivery_fee_iqd: deliveryFee,
+            discount_iqd: discount,
+            total_iqd: total,
+            notes: orderNotes || "",
+            items: items
+          })
+        }).catch(() => {});
+        if (context.waitUntil) {
+          context.waitUntil(alertPromise);
+        }
+      }
+
       return jsonResponse({
         success: true,
         order_number: orderNumber,
@@ -569,7 +602,8 @@ export async function onRequest(context) {
         change_due_iqd: changeDue
       });
     }
-// 8.5 POST /api/manage/upload (Direct R2 Image Upload)
+
+    // 8.5 POST /api/manage/upload (Direct R2 Image/Media Upload)
     if (method === "POST" && path === "manage/upload") {
       if (!env.IMAGES_BUCKET) {
         return jsonResponse({ error: "R2 binding 'IMAGES_BUCKET' is not configured." }, 500);
@@ -579,16 +613,16 @@ export async function onRequest(context) {
       const file = formData.get("file");
 
       if (!file || typeof file === "string") {
-        return jsonResponse({ error: "لم يتم اختيار ملف صورة" }, 400);
+        return jsonResponse({ error: "لم يتم اختيار ملف" }, 400);
       }
 
-      const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"];
+      const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif", "video/mp4"];
       if (!allowedTypes.includes(file.type)) {
-        return jsonResponse({ error: "صيغة الملف غير مدعومة (يرجى رفع JPG, PNG, أو WebP)" }, 400);
+        return jsonResponse({ error: "صيغة الملف غير مدعومة" }, 400);
       }
 
-      if (file.size > 10 * 1024 * 1024) {
-        return jsonResponse({ error: "حجم الصورة يتجاوز الحد المسموح (10MB)" }, 400);
+      if (file.size > 25 * 1024 * 1024) {
+        return jsonResponse({ error: "حجم الملف يتجاوز الحد المسموح (25MB)" }, 400);
       }
 
       const extMap = {
@@ -596,11 +630,13 @@ export async function onRequest(context) {
         "image/png": "png",
         "image/webp": "webp",
         "image/gif": "gif",
-        "image/avif": "avif"
+        "image/avif": "avif",
+        "video/mp4": "mp4"
       };
       const ext = extMap[file.type] || "webp";
+      const folder = file.type.startsWith("video/") ? "videos" : "products";
       const randomPart = Math.random().toString(36).substring(2, 8);
-      const objectKey = `products/${Date.now()}-${randomPart}.${ext}`;
+      const objectKey = `${folder}/${Date.now()}-${randomPart}.${ext}`;
 
       await env.IMAGES_BUCKET.put(objectKey, await file.arrayBuffer(), {
         httpMetadata: {
@@ -703,7 +739,7 @@ export async function onRequest(context) {
       return jsonResponse({ success: true });
     }
     
-    // 10. Reports Summary (Separate queries to avoid Cartesian duplication)
+    // 10. Reports Summary
     if (method === "GET" && path === "reports") {
       const url = new URL(request.url);
       const startDate = url.searchParams.get("start") || "1970-01-01";
@@ -794,6 +830,227 @@ export async function onRequest(context) {
       }
 
       return jsonResponse({ success: true });
+    }
+
+    // ==================== 12. AI AGENT ENDPOINTS (/api/agent/*) ====================
+    if (path.startsWith("agent/")) {
+      if (!verifyAgentAuth(request, env)) {
+        return jsonResponse({ error: "Unauthorized Agent Request" }, 401);
+      }
+
+      // 12.1 GET /api/agent/customer-context
+      if (method === "GET" && path === "agent/customer-context") {
+        const url = new URL(request.url);
+        const phone = String(url.searchParams.get("phone") || "").replace(/[\s\-]/g, "");
+        const platform = String(url.searchParams.get("platform") || "").trim();
+        const userId = String(url.searchParams.get("user_id") || "").trim();
+
+        let lead = null;
+        if (platform && userId) {
+          lead = await db.prepare(
+            "SELECT * FROM social_leads WHERE platform = ? AND platform_user_id = ?"
+          ).bind(platform, userId).first();
+        } else if (phone) {
+          lead = await db.prepare(
+            "SELECT * FROM social_leads WHERE phone = ? ORDER BY updated_at DESC LIMIT 1"
+          ).bind(phone).first();
+        }
+
+        const resolvedPhone = phone || (lead && lead.phone) || "";
+        let customer = null;
+        let addresses = [];
+        let pastOrders = [];
+
+        if (resolvedPhone) {
+          customer = await db.prepare(
+            "SELECT phone, name, default_address, notes, total_spent_iqd, orders_count FROM customers WHERE phone = ?"
+          ).bind(resolvedPhone).first();
+
+          const addrRes = await db.prepare(
+            "SELECT address, landmark, last_used_at FROM customer_addresses WHERE customer_phone = ? ORDER BY last_used_at DESC LIMIT 5"
+          ).bind(resolvedPhone).all();
+          addresses = addrRes.results || [];
+
+          const ordRes = await db.prepare(`
+            SELECT o.order_number, o.channel, o.status, o.total_iqd, o.created_at,
+                   json_group_array(json_object('product', oi.product_name_ar, 'size', oi.size_label, 'qty', oi.quantity)) AS items_json
+            FROM orders o
+            LEFT JOIN order_items oi ON o.id = oi.order_id
+            WHERE o.customer_phone = ?
+            GROUP BY o.id
+            ORDER BY o.created_at DESC
+            LIMIT 10
+          `).bind(resolvedPhone).all();
+
+          pastOrders = (ordRes.results || []).map(o => ({
+            order_number: o.order_number,
+            channel: o.channel,
+            status: o.status,
+            total_iqd: o.total_iqd,
+            created_at: o.created_at,
+            items: JSON.parse(o.items_json || "[]")
+          }));
+        }
+
+        return jsonResponse({
+          known_customer: Boolean(customer),
+          customer,
+          addresses,
+          past_orders: pastOrders,
+          social_lead: lead
+        });
+      }
+
+      // 12.2 POST /api/agent/social-lead
+      if (method === "POST" && path === "agent/social-lead") {
+        const body = await request.json();
+        const { platform, platform_user_id, username, phone, interested_products, lead_stage, last_message_summary } = body;
+
+        if (!platform || !platform_user_id) {
+          return jsonResponse({ error: "platform and platform_user_id are required" }, 400);
+        }
+
+        const cleanPhone = phone ? String(phone).replace(/[\s\-]/g, "") : null;
+
+        await db.prepare(`
+          INSERT INTO social_leads (platform, platform_user_id, username, phone, interested_products, lead_stage, last_message_summary, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+          ON CONFLICT(platform, platform_user_id) DO UPDATE SET
+            username = COALESCE(excluded.username, social_leads.username),
+            phone = COALESCE(excluded.phone, social_leads.phone),
+            interested_products = COALESCE(excluded.interested_products, social_leads.interested_products),
+            lead_stage = COALESCE(excluded.lead_stage, social_leads.lead_stage),
+            last_message_summary = COALESCE(excluded.last_message_summary, social_leads.last_message_summary),
+            updated_at = CURRENT_TIMESTAMP
+        `).bind(
+          platform,
+          String(platform_user_id),
+          username || null,
+          cleanPhone,
+          interested_products || null,
+          lead_stage || "inquiry",
+          last_message_summary || null
+        ).run();
+
+        if (cleanPhone) {
+          await db.prepare(`
+            INSERT INTO customers (phone, name, notes, total_spent_iqd, orders_count)
+            VALUES (?, ?, ?, 0, 0)
+            ON CONFLICT(phone) DO UPDATE SET
+              name = COALESCE(excluded.name, customers.name)
+          `).bind(cleanPhone, username || "زبون سوشيال", `[${platform}] ${last_message_summary || ""}`).run();
+        }
+
+        return jsonResponse({ success: true });
+      }
+
+      // 12.3 GET /api/agent/analytics (Unified POS + Web + Leads + Media + Market Intel)
+      if (method === "GET" && path === "agent/analytics") {
+        const topProducts = await db.prepare(`
+          SELECT oi.product_name_ar, oi.size_label, o.channel,
+                 SUM(oi.quantity) AS units_sold,
+                 SUM(oi.line_total_iqd) AS revenue_iqd
+          FROM order_items oi
+          JOIN orders o ON oi.order_id = o.id
+          WHERE o.status != 'cancelled' AND o.created_at >= datetime('now', '-30 days')
+          GROUP BY oi.product_name_ar, oi.size_label, o.channel
+          ORDER BY units_sold DESC
+          LIMIT 25
+        `).all();
+
+        const lowStock = await db.prepare(`
+          SELECT p.id AS product_id, p.name_ar, p.category, v.id AS variant_id, v.size_label, v.stock_quantity, v.in_stock
+          FROM product_variants v
+          JOIN products p ON v.product_id = p.id
+          WHERE p.is_active = 1 AND (v.in_stock = 0 OR (v.stock_quantity IS NOT NULL AND v.stock_quantity <= 5))
+          ORDER BY v.stock_quantity ASC
+        `).all();
+
+        const recentLeads = await db.prepare(`
+          SELECT platform, username, phone, interested_products, lead_stage, last_message_summary, updated_at
+          FROM social_leads
+          ORDER BY updated_at DESC
+          LIMIT 25
+        `).all();
+
+        const recentIntel = await db.prepare(`
+          SELECT id, source, competitor_or_topic, summary, actionable_opportunity, captured_at
+          FROM market_intel
+          ORDER BY captured_at DESC
+          LIMIT 20
+        `).all();
+
+        const unpostedMedia = await db.prepare(`
+          SELECT id, r2_key, public_url, media_type, product_id, gemini_description, quality_score, times_published, last_published_at
+          FROM media_assets
+          ORDER BY times_published ASC, quality_score DESC, created_at DESC
+          LIMIT 20
+        `).all();
+
+        return jsonResponse({
+          top_products_30d: topProducts.results || [],
+          low_or_out_of_stock: lowStock.results || [],
+          recent_social_leads: recentLeads.results || [],
+          recent_market_intel: recentIntel.results || [],
+          available_media_assets: unpostedMedia.results || []
+        });
+      }
+
+      // 12.4 POST /api/agent/intel
+      if (method === "POST" && path === "agent/intel") {
+        const body = await request.json();
+        const { source, competitor_or_topic, summary, actionable_opportunity } = body;
+
+        if (!summary) {
+          return jsonResponse({ error: "summary is required" }, 400);
+        }
+
+        await db.prepare(`
+          INSERT INTO market_intel (source, competitor_or_topic, summary, actionable_opportunity)
+          VALUES (?, ?, ?, ?)
+        `).bind(
+          source || "web_trend",
+          competitor_or_topic || null,
+          summary,
+          actionable_opportunity || null
+        ).run();
+
+        return jsonResponse({ success: true });
+      }
+
+      // 12.5 POST /api/agent/media (Register new media or mark published)
+      if (method === "POST" && path === "agent/media") {
+        const body = await request.json();
+
+        if (body.action === "mark_published" && body.media_id) {
+          await db.prepare(`
+            UPDATE media_assets
+            SET times_published = times_published + 1,
+                last_published_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+          `).bind(body.media_id).run();
+          return jsonResponse({ success: true });
+        }
+
+        const { r2_key, public_url, media_type, product_id, gemini_description, quality_score } = body;
+        if (!public_url) {
+          return jsonResponse({ error: "public_url is required" }, 400);
+        }
+
+        const res = await db.prepare(`
+          INSERT INTO media_assets (r2_key, public_url, media_type, product_id, gemini_description, quality_score)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `).bind(
+          r2_key || "",
+          public_url,
+          media_type || "image",
+          product_id || null,
+          gemini_description || "",
+          Number(quality_score) || 7
+        ).run();
+
+        return jsonResponse({ success: true, media_id: res.meta.last_row_id });
+      }
     }
 
     return jsonResponse({ error: `Route '/api/${path}' not found` }, 404);
